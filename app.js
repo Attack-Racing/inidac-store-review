@@ -17,6 +17,19 @@ const COUNTRIES = [
   {name:"香港", regions:["香港島","九龍","新界","その他"]},
   {name:"韓国", regions:["ソウル","釜山","仁川","大邱","その他"]},
   {name:"シンガポール", regions:["Central","East","North","North-East","West"]},
+  {name:"インドネシア", regions:["Jakarta","West Java","East Java","Bali","その他"]},
+  {name:"タイ", regions:["Bangkok","Chiang Mai","Phuket","その他"]},
+  {name:"ベトナム", regions:["Ho Chi Minh City","Hanoi","Da Nang","その他"]},
+  {name:"フィリピン", regions:["Metro Manila","Cebu","その他"]},
+  {name:"中国", regions:["Shanghai","Beijing","Guangdong","その他"]},
+  {name:"オーストラリア", regions:["New South Wales","Victoria","Queensland","その他"]},
+  {name:"アメリカ合衆国", regions:["California","Texas","New York","その他"]},
+  {name:"イギリス", regions:["England","Scotland","Wales","その他"]},
+  {name:"中国", regions:["Shanghai","Beijing","Guangdong","その他"]},
+  {name:"フィリピン", regions:["Metro Manila","Cebu","その他"]},
+  {name:"オーストラリア", regions:["New South Wales","Victoria","Queensland","その他"]},
+  {name:"アメリカ合衆国", regions:["California","Texas","New York","その他"]},
+  {name:"イギリス", regions:["England","Scotland","Wales","その他"]},
   {name:"その他", regions:["その他"]}
 ];
 const demoStores = [
@@ -36,7 +49,7 @@ function displayedComment(r){return currentLanguage === "en" && r.commentEn ? r.
 function applyLanguage(){
   renderAll();
   document.documentElement.lang=currentLanguage;
-  const map={"店舗を探す":"Find Stores","店舗を追加":"Add a Store","編集モード":"Edit Website","編集を保存":"Save Changes","ログイン / 登録":"Login / Sign Up","次に走る店を、":"Find your next arcade,","レビューで見つけよう。":"through player reviews.","筐体の整備状態、店舗の雰囲気、店内ドライバーのレベル。プレイヤーの体験を共有して、遊びに行く店舗選びに役立てよう。":"Share cabinet condition, store atmosphere, and local player skill to help others choose where to play.","店舗を登録する":"Add a Store","登録店舗":"Stores","レビュー":"Reviews","日本・海外対応":"Japan & Worldwide","店舗ごとにレビューを集約し、平均評価を表示します。":"Reviews are grouped by store and average ratings are shown.","店舗名・住所で検索":"Search store name or address","国名で絞り込み":"Filter by country","日本国内のみ入力":"Filter by region","レビューが多い順":"Most reviews","メンテナンス評価順":"Maintenance rating","店舗総合評価順":"Overall rating","店舗名順":"Store name","店舗が見つかりません":"No stores found","検索条件を変えるか、新しい店舗を登録してください。":"Change your search or add a new store.","登録済み店舗がないか確認してから追加してください。":"Check whether the store is already listed before adding it.","店舗情報":"Store Information","場所と基本情報を登録":"Add location and basic information","店舗名":"Store name","国":"Country","都道府県・州・地域":"State / Region","住所":"Address","設置台数":"Cabinet count","店舗メモ":"Store notes","必須":"Required","任意":"Optional","Google Mapsで場所を共有":"Share the location with Google Maps","店舗の重複に注意":"Avoid duplicate listings","レビューは体験ベースで":"Keep reviews experience-based","レビューを投稿する":"Post a Review","店舗を選び、評価とコメントを入力してください。":"Choose a store, then enter ratings and comments.","メンテナンス評価":"Maintenance","店舗総合評価":"Overall Store Rating","店内ランク":"Local Player Skill","通信状況":"Connection Quality","コメント（日本語）":"Comment (Japanese)","訪問日":"Visit Date","最近のレビュー":"Recent Reviews","プレイヤー同士で、もっと良い走行スポットを見つけよう。":"Help fellow players find better places to race.","実際の体験に基づくレビューであり、個人情報や誹謗中傷を含めていません。":"This review reflects my own experience and contains no personal data or abuse.","変更を保存":"Save Changes","レビューを更新しました。":"Review updated.","レビューを投稿しました。":"Review posted.","店舗を登録しました。":"Store added.","Google Mapsで開く ↗":"Open Google Maps ↗","詳細・コメント":"Details & Reviews","この店舗をレビュー":"Review this store","まだレビューはありません。":"No reviews yet.","問題を報告":"Report issue","編集":"Edit","削除":"Delete","運営削除":"Admin delete"};
+  const map={"店舗を探す":"Find Stores","すべての国":"All countries","すべての地域":"All regions","国を選択":"Select a country","店舗を追加":"Add a Store","編集モード":"Edit Website","編集を保存":"Save Changes","ログイン / 登録":"Login / Sign Up","次に走る店を、":"Find your next arcade,","レビューで見つけよう。":"through player reviews.","筐体の整備状態、店舗の雰囲気、店内ドライバーのレベル。プレイヤーの体験を共有して、遊びに行く店舗選びに役立てよう。":"Share cabinet condition, store atmosphere, and local player skill to help others choose where to play.","店舗を登録する":"Add a Store","登録店舗":"Stores","レビュー":"Reviews","レビュー・コメント":"Reviews & Comments","メンテナンス":"Maintenance","店舗総合評価":"Overall Store Rating","整備：":"Maintenance: ","店舗：":"Store: ","店内ランク":"Local Player Skill","通信状況":"Connection Quality","設置 ":"Cabinets ","台数未登録":"No cabinet count","訪問日未登録":"No visit date","登録店舗":"Stores","日本・海外対応":"Japan & Worldwide","店舗ごとにレビューを集約し、平均評価を表示します。":"Reviews are grouped by store and average ratings are shown.","店舗名・住所で検索":"Search store name or address","国名で絞り込み":"Filter by country","日本国内のみ入力":"Filter by region","レビューが多い順":"Most reviews","メンテナンス評価順":"Maintenance rating","店舗総合評価順":"Overall rating","店舗名順":"Store name","店舗が見つかりません":"No stores found","検索条件を変えるか、新しい店舗を登録してください。":"Change your search or add a new store.","登録済み店舗がないか確認してから追加してください。":"Check whether the store is already listed before adding it.","店舗情報":"Store Information","場所と基本情報を登録":"Add location and basic information","店舗名":"Store name","国":"Country","都道府県・州・地域":"State / Region","住所":"Address","設置台数":"Cabinet count","店舗メモ":"Store notes","必須":"Required","任意":"Optional","Google Mapsで場所を共有":"Share the location with Google Maps","店舗の重複に注意":"Avoid duplicate listings","レビューは体験ベースで":"Keep reviews experience-based","レビューを投稿する":"Post a Review","店舗を選び、評価とコメントを入力してください。":"Choose a store, then enter ratings and comments.","メンテナンス評価":"Maintenance","店舗総合評価":"Overall Store Rating","店内ランク":"Local Player Skill","通信状況":"Connection Quality","コメント（日本語）":"Comment (Japanese)","コメント":"Comment","Comment (English)":"Comment (English)","任意 / Optional":"Optional","訪問日":"Visit Date","最近のレビュー":"Recent Reviews","プレイヤー同士で、もっと良い走行スポットを見つけよう。":"Help fellow players find better places to race.","実際の体験に基づくレビューであり、個人情報や誹謗中傷を含めていません。":"This review reflects my own experience and contains no personal data or abuse.","非公式のファン向けサイトです。SEGAおよび「頭文字D THE ARCADE」の公式サイトではありません。":"This is an unofficial fan site and is not affiliated with SEGA or Initial D THE ARCADE.","プレイヤー同士で、もっと良い走行スポットを見つけよう。":"Help fellow players find better places to race.","店舗を選択":"Select a store","登録ユーザーとして店舗やレビューを投稿できます。":"Sign in to add stores and reviews.","店舗名・住所をもとに重複を確認します。":"Check for duplicates by store name and address.","変更を保存":"Save Changes","ログアウトしました。":"Logged out.","ログインしました。":"Logged in.","レビューを投稿できませんでした：":"Could not post review: ","店舗を登録できませんでした：":"Could not add store: ","レビューを更新しました。":"Review updated.","レビューを投稿しました。":"Review posted.","店舗を登録しました。":"Store added.","Google Mapsで開く ↗":"Open Google Maps ↗","詳細・コメント":"Details & Reviews","この店舗をレビュー":"Review this store","まだレビューはありません。":"No reviews yet.","問題を報告":"Report issue","編集":"Edit","削除":"Delete","運営削除":"Admin delete"};
   const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
   for(const n of nodes){if(!n.__jaOriginal)n.__jaOriginal=n.nodeValue;const original=n.__jaOriginal.trim();if(!original)continue;const translated=map[original];if(translated)n.nodeValue=n.__jaOriginal.replace(original,currentLanguage==="en"?translated:original);}
   const placeholderMap={"店舗名・住所で検索":"Search store name or address","国名で絞り込み":"Filter by country","日本国内のみ入力":"Filter by region","例：○○ゲームセンター":"e.g. Arcade name","例：日本 / Malaysia":"e.g. Japan / Malaysia","日本の場合：千葉県":"For Japan: Chiba Prefecture","海外店舗は入力不要":"Not required for overseas stores","Google Mapsで検索できる住所":"Address searchable in Google Maps","https://maps.google.com/...":"https://maps.google.com/...","例：4":"e.g. 4","営業時間、混雑しやすい時間など":"Opening hours, busy times, etc.","体験した内容を日本語で入力":"Describe your experience in Japanese","You may also write your review in English.":"You may also write your review in English."};
@@ -52,39 +65,51 @@ function readLocal(){try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY
 function saveLocal(){localStorage.setItem(STORAGE_KEY,JSON.stringify({stores,reviews}));}
 function average(list,key){const values=list.map(x=>Number(x[key])).filter(n=>Number.isFinite(n)&&n>=1);return values.length?values.reduce((a,b)=>a+b,0)/values.length:null;}
 function fmtAverage(n){return n===null?"—":n.toFixed(1);}
-function countLabel(n){return `${n}件`;}
-function labelForScore(n){if(n===null)return "未評価";if(n>=3.5)return "良い";if(n>=2.5)return "普通";if(n>=1.5)return "少し悪い";return "悪い";}
+function countLabel(n){return currentLanguage === "en" ? `${n} reviews` : `${n}件`; }
+function labelForScore(n){if(n===null)return currentLanguage==="en"?"Not rated":"未評価";if(n>=3.5)return currentLanguage==="en"?"Good":"良い";if(n>=2.5)return currentLanguage==="en"?"Average":"普通";if(n>=1.5)return currentLanguage==="en"?"Below average":"少し悪い";return currentLanguage==="en"?"Poor":"悪い";}
 function getStoreReviews(id){return reviews.filter(r=>r.storeId===id);}
 function storeScore(store,key){return average(getStoreReviews(store.id),key);}
 function mapUrl(store){if(store.mapsUrl && /^https?:\/\//i.test(store.mapsUrl))return store.mapsUrl;return "https://www.google.com/maps/search/?api=1&query="+encodeURIComponent([store.name,store.address,store.region,store.country].filter(Boolean).join(" "));}
-function dateLabel(value){if(!value)return "訪問日未登録";const d=new Date(value+"T00:00:00");return Number.isNaN(d.getTime())?value:d.toLocaleDateString("ja-JP");}
+function dateLabel(value){if(!value)return currentLanguage==="en"?"No visit date":"訪問日未登録";const d=new Date(value+"T00:00:00");return Number.isNaN(d.getTime())?value:d.toLocaleDateString(currentLanguage==="en"?"en-MY":"ja-JP");}
 function populateCountries(){
-  // Country and region are free-text fields; international listings only need country.
-  const countryInput=$("#storeCountry"), regionInput=$("#storeRegion");
-  function updateRegionRequirement(){
-    const isJapan=countryInput.value.trim().toLowerCase()==="日本" || countryInput.value.trim().toLowerCase()==="japan";
-    regionInput.required=isJapan;
-    regionInput.disabled=!isJapan;
-    regionInput.value=isJapan?regionInput.value:"";
-    regionInput.placeholder=isJapan?"日本の場合：千葉県":"海外店舗は入力不要";
-    $("#regionFieldLabel").classList.toggle("muted",!isJapan);
+  const input=$("#storeCountry"), filter=$("#countryFilter");
+  if(input){
+    const old=input.value;
+    const names=[...new Set([...COUNTRIES.map(c=>c.name),...stores.map(s=>s.country).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,"ja"));
+    input.innerHTML='<option value="">国を選択</option>'+names.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+    if(old) input.value=old;
   }
-  countryInput.addEventListener("input",updateRegionRequirement);
-  updateRegionRequirement();
+  if(filter && !filter.dataset.ready){filter.innerHTML='<option value="">すべての国</option>';filter.dataset.ready="1";}
+  populateRegions();
 }
-function populateRegions(){}
+function populateRegions(){
+  const countryFilter=$("#countryFilter"), regionFilter=$("#regionFilter");
+  if(countryFilter){
+    const selected=countryFilter.value;
+    const names=[...new Set([...COUNTRIES.map(c=>c.name),...stores.map(s=>s.country).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,"ja"));
+    countryFilter.innerHTML='<option value="">すべての国</option>'+names.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("");
+    if(names.includes(selected))countryFilter.value=selected;
+  }
+  if(regionFilter){
+    const selected=regionFilter.value, chosen=countryFilter?.value||"";
+    const regionNames=[...new Set(stores.filter(s=>!chosen||s.country===chosen).map(s=>s.region).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ja"));
+    regionFilter.innerHTML='<option value="">すべての地域</option>'+regionNames.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("");
+    if(regionNames.includes(selected))regionFilter.value=selected;
+  }
+}
 function refreshReviewStoreSelect(){const select=$("#reviewStoreSelect"),previous=select.value;select.innerHTML='<option value="">店舗を選択</option>'+stores.map(s=>`<option value="${escapeHtml(s.id)}">${escapeHtml(s.name)}（${escapeHtml(s.country)}${s.region?`・${escapeHtml(s.region)}`:""}）</option>`).join("");if(stores.some(s=>s.id===previous))select.value=previous;}
 function renderStats(){$("#storeCount").textContent=stores.length;$("#reviewCount").textContent=reviews.length;}
 function renderStores(){
+  populateRegions();
   const query=$("#searchInput").value.trim().toLocaleLowerCase(),country=$("#countryFilter").value,region=$("#regionFilter").value,sort=$("#sortFilter").value;
-  let list=stores.filter(s=>(!country||s.country.toLocaleLowerCase().includes(country.toLocaleLowerCase()))&&(!region||String(s.region||"").toLocaleLowerCase().includes(region.toLocaleLowerCase()))&&(!query||[s.name,s.address,s.country,s.region].join(" ").toLocaleLowerCase().includes(query)));
+  let list=stores.filter(s=>(!country||String(s.country||"")===country)&&(!region||String(s.region||"")===region)&&(!query||[s.name,s.address,s.country,s.region].join(" ").toLocaleLowerCase().includes(query)));
   list.sort((a,b)=>{if(sort==="name")return a.name.localeCompare(b.name,"ja");if(sort==="maintenance")return (storeScore(b,"maintenance")??0)-(storeScore(a,"maintenance")??0);if(sort==="overall")return (storeScore(b,"overall")??0)-(storeScore(a,"overall")??0);return getStoreReviews(b.id).length-getStoreReviews(a.id).length;});
-  $("#resultCount").textContent=`${list.length} 件`;$("#emptyState").classList.toggle("hidden",list.length!==0);
+  $("#resultCount").textContent=currentLanguage==="en"?`${list.length} results`:`${list.length} 件`;$("#emptyState").classList.toggle("hidden",list.length!==0);
   $("#storeGrid").innerHTML=list.map(s=>{const rs=getStoreReviews(s.id),m=storeScore(s,"maintenance"),o=storeScore(s,"overall");return `<article class="store-card">
     <div class="store-card-top"><span class="store-code">ARCADE SPOT / ${escapeHtml(s.country)}</span><span class="store-icon">⌖</span></div>
     <div class="store-card-body"><h3>${escapeHtml(s.name)}</h3><div class="store-location"><span>⌖</span><span>${escapeHtml(s.country)}${s.region?`・${escapeHtml(s.region)}`:""}<br>${escapeHtml(s.address)}</span></div>
     <div class="store-rating-row"><div class="rating-chip"><small>メンテナンス</small><strong>${fmtAverage(m)} <span class="rating-word">${labelForScore(m)}</span></strong></div><div class="rating-chip"><small>店舗総合評価</small><strong>${fmtAverage(o)} <span class="rating-word">${labelForScore(o)}</span></strong></div></div>
-    <div class="store-meta"><span>レビュー ${countLabel(rs.length)}</span><span>${s.cabinetCount?`設置 ${s.cabinetCount}台`:"台数未登録"}</span></div>
+    <div class="store-meta"><span>${currentLanguage==="en"?countLabel(rs.length):"レビュー "+countLabel(rs.length)}</span><span>${s.cabinetCount?`設置 ${s.cabinetCount}台`:"台数未登録"}</span></div>
     <div class="store-card-actions"><button class="mini-button primary-mini" data-details="${escapeHtml(s.id)}">詳細・コメント</button><a class="mini-button" href="${escapeHtml(mapUrl(s))}" target="_blank" rel="noopener noreferrer">Google Maps ↗</a></div></div></article>`;}).join("");
   renderStats();refreshReviewStoreSelect();
 }
@@ -112,7 +137,7 @@ async function loadData(){
     $("#reviewFormNote").textContent="デモモード：レビューはこのブラウザ内だけに保存されます。他の人には共有されません。";
     $("#authNote").textContent="デモモードの簡易プロフィールです。実際の認証ではありません。";
   }
-  updateAuthButton();renderAll();
+  populateCountries();updateAuthButton();renderAll();
 }
 function fromDbStore(s){return {id:s.id,name:s.name,country:s.country,region:s.region,address:s.address,mapsUrl:s.maps_url,cabinetCount:s.cabinet_count,description:s.description,createdAt:s.created_at};}
 function fromDbReview(r){return {id:r.id,storeId:r.store_id,maintenance:r.maintenance,overall:r.overall,driverRank:r.driver_rank,connection:r.connection,comment:r.comment,commentEn:r.comment_en||"",visitedAt:r.visited_at,createdAt:r.created_at,author:r.author_name||"メンバー",authorId:r.user_id};}
@@ -181,8 +206,8 @@ async function handleAuth(e){
   else {const profile=getCurrentProfile();if(!profile||profile.email!==email){showToast("デモモードでは先に新規登録してください。");return;}currentUser=profile;}
   updateAuthButton();$("#authDialog").close();showToast(authMode==="signup"?"デモプロフィールを作成しました。":"ログインしました（デモ）。");
 }
-$("#countryFilter").addEventListener("input",renderStores);
-$("#regionFilter").addEventListener("input",renderStores);
+$("#countryFilter").addEventListener("change",()=>{populateRegions();renderStores();});
+$("#regionFilter").addEventListener("change",renderStores);
 $("#searchInput").addEventListener("input",renderStores);
 $("#sortFilter").addEventListener("change",renderStores);
 $("#storeForm").addEventListener("submit",async e=>{e.preventDefault();if(!requireUser())return;const fd=new FormData(e.currentTarget);const country=String(fd.get("country")).trim();const region=String(fd.get("region")||"").trim();if(!country){showToast("国名を入力してください。");return;}if((country.toLowerCase()==="日本"||country.toLowerCase()==="japan")&&!region){showToast("日本国内の店舗は都道府県を入力してください。");return;}await addStore({name:String(fd.get("name")).trim(),country,region:region,address:String(fd.get("address")).trim(),mapsUrl:String(fd.get("mapsUrl")).trim(),cabinetCount:fd.get("cabinetCount")?Number(fd.get("cabinetCount")):null,description:String(fd.get("description")).trim()});});
