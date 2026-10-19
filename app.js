@@ -35,7 +35,7 @@ const demoReviews = [
   {id:"demo-r2",storeId:"demo-1",maintenance:3,overall:4,driverRank:3,connection:null,comment:"【サンプルレビュー】店舗の雰囲気や待ち時間などの例です。実際の評価ではありません。",visitedAt:"2026-10-12",createdAt:"2026-10-12T10:00:00.000Z",author:"サンプルユーザー",demo:true},
   {id:"demo-r3",storeId:"demo-2",maintenance:3,overall:3,driverRank:4,connection:2,comment:"[Sample review] Example text only. Replace with a real experience before relying on the rating.",visitedAt:"2026-10-11",createdAt:"2026-10-11T10:00:00.000Z",author:"Sample User",demo:true}
 ];
-let supabaseClient = null, currentUser = null, authMode = "login", toastTimer;
+let supabase = null, currentUser = null, authMode = "login", toastTimer;
 let stores = [], reviews = [];
 function isConfigured(){return !!(CONFIG.supabaseUrl && CONFIG.supabaseAnonKey && window.supabase);}
 function escapeHtml(value=""){return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
