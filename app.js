@@ -3,7 +3,7 @@
    For public multi-user use, configure Supabase in CONFIG below and run supabase/schema.sql.
 */
 const CONFIG = {
-  supabaseUrl: "eujaamtodxwnugvrxrql.supabase.co",
+  supabaseUrl: "https://eujaamtodxwnugvrxrql.supabase.co",
   supabaseAnonKey: "sb_publishable_Ao3TirjTJ1W991HpxG5Lmg_sZfycu1l" 
 };
 const ADMIN_EMAILS = ["grgt1462@gmail.com"];
