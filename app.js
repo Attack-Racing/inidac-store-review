@@ -36,6 +36,42 @@ const demoReviews = [
 ];
 let supabase = null, currentUser = null, authMode = "login", toastTimer;
 let stores = [], reviews = [];
+
+function bindAuthButton() {
+  const btn = document.querySelector("#authButton");
+  if (!btn || btn.dataset.authBound === "true") return;
+
+  btn.dataset.authBound = "true";
+
+  btn.addEventListener("click", async () => {
+    try {
+      if (currentUser) {
+        if (supabase) {
+          const { error } = await supabase.auth.signOut();
+          if (error) {
+            showToast("ログアウトできませんでした：" + error.message);
+            return;
+          }
+        } else {
+          localStorage.removeItem(PROFILE_KEY);
+        }
+
+        currentUser = null;
+        updateAuthButton();
+        showToast("ログアウトしました。");
+      } else {
+        const dialog = document.querySelector("#authDialog");
+        if (dialog && !dialog.open) dialog.showModal();
+      }
+    } catch (error) {
+      console.error("Auth button error:", error);
+      showToast("ログイン画面を開けませんでした。Consoleを確認してください。");
+    }
+  });
+}
+
+bindAuthButton();
+
 function isConfigured(){return !!(CONFIG.supabaseUrl && CONFIG.supabaseAnonKey && window.supabase);}
 function escapeHtml(value=""){return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function uid(){return crypto.randomUUID ? crypto.randomUUID() : "id-"+Date.now()+"-"+Math.random().toString(16).slice(2);}
