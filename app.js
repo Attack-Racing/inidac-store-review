@@ -1,4 +1,5 @@
-/* イニDAC 店舗レビュー — front-end prototype.
+(function() {
+   /* イニDAC 店舗レビュー — front-end prototype.
    For public multi-user use, configure Supabase in CONFIG below and run supabase/schema.sql.
 */
 const CONFIG = {
@@ -168,3 +169,4 @@ $("#homeLink").addEventListener("click",e=>{e.preventDefault();window.scrollTo({
 $("#visitedAt").value=new Date().toISOString().slice(0,10);
 populateCountries();
 loadData();
+})();
