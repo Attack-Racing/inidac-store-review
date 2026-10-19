@@ -610,6 +610,179 @@
   }
 
   function openDetails(id) {
+    async function editReview(id) {
+  if (!requireUser()) return;
+
+  const r = reviews.find(x => String(x.id) === String(id));
+  if (!r || (r.authorId !== currentUser.id && !isAdmin())) {
+    showToast("自分の投稿のみ編集できます。");
+    return;
+  }
+
+  const d = document.createElement("dialog");
+  d.className = "modal";
+  d.innerHTML = `
+    <form method="dialog">
+      <button type="submit">閉じる ×</button>
+    </form>
+    <h2>レビューを編集</h2>
+    <form id="editReviewForm">
+      <label>店舗
+        <select name="storeId" required>
+          ${stores.map(s => `
+            <option value="${escapeHtml(s.id)}"
+              ${String(s.id) === String(r.storeId) ? "selected" : ""}>
+              ${escapeHtml(s.name)}
+            </option>
+          `).join("")}
+        </select>
+      </label>
+
+      <label>メンテナンス評価
+        <select name="maintenance" required>
+          ${[4,3,2,1].map(n => `
+            <option value="${n}" ${Number(r.maintenance) === n ? "selected" : ""}>
+              ${n} - ${labelForScore(n)}
+            </option>
+          `).join("")}
+        </select>
+      </label>
+
+      <label>店舗総合評価
+        <select name="overall" required>
+          ${[4,3,2,1].map(n => `
+            <option value="${n}" ${Number(r.overall) === n ? "selected" : ""}>
+              ${n} - ${labelForScore(n)}
+            </option>
+          `).join("")}
+        </select>
+      </label>
+
+      <label>店内ランク
+        <select name="driverRank">
+          <option value="">未評価</option>
+          ${[5,4,3,2,1].map(n => `
+            <option value="${n}" ${Number(r.driverRank) === n ? "selected" : ""}>${n}/5</option>
+          `).join("")}
+        </select>
+      </label>
+
+      <label>通信状況
+        <select name="connection">
+          <option value="">未評価</option>
+          ${[5,4,3,2,1].map(n => `
+            <option value="${n}" ${Number(r.connection) === n ? "selected" : ""}>${n}/5</option>
+          `).join("")}
+        </select>
+      </label>
+
+      <label>訪問日
+        <input type="date" name="visitedAt"
+          value="${escapeHtml(r.visitedAt || "")}">
+      </label>
+
+      <label>コメント
+        <textarea name="comment" minlength="5" maxlength="1500" required>${escapeHtml(r.comment)}</textarea>
+      </label>
+
+      <button type="submit">変更を保存</button>
+    </form>
+  `;
+
+  document.body.appendChild(d);
+  d.showModal();
+  d.addEventListener("close", () => d.remove());
+
+  $("#editReviewForm", d).addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const fd = new FormData(e.currentTarget);
+    const patch = {
+      storeId: String(fd.get("storeId")),
+      maintenance: Number(fd.get("maintenance")),
+      overall: Number(fd.get("overall")),
+      driverRank: fd.get("driverRank") ? Number(fd.get("driverRank")) : null,
+      connection: fd.get("connection") ? Number(fd.get("connection")) : null,
+      visitedAt: String(fd.get("visitedAt") || ""),
+      comment: String(fd.get("comment")).trim()
+    };
+
+    if (patch.comment.length < 5) {
+      showToast("コメントは5文字以上で入力してください。");
+      return;
+    }
+
+    if (supabase) {
+      let q = supabase.from("reviews").update({
+        store_id: patch.storeId,
+        maintenance: patch.maintenance,
+        overall: patch.overall,
+        driver_rank: patch.driverRank,
+        connection: patch.connection,
+        visited_at: patch.visitedAt || null,
+        comment: patch.comment
+      }).eq("id", r.id);
+
+      if (!isAdmin()) q = q.eq("user_id", currentUser.id);
+
+      const { data, error } = await q.select().maybeSingle();
+
+      if (error || !data) {
+        showToast("更新できませんでした：" +
+          (error?.message || "Supabaseの更新権限を確認してください。"));
+        return;
+      }
+
+      Object.assign(r, fromDbReview(data));
+    } else {
+      Object.assign(r, patch);
+      saveLocal();
+    }
+
+    d.close();
+    renderAll();
+    showToast("レビューを更新しました。");
+  });
+}
+
+async function deleteReview(id) {
+  if (!requireUser()) return;
+
+  const r = reviews.find(x => String(x.id) === String(id));
+  if (!r) return;
+
+  const own = r.authorId === currentUser.id;
+
+  if (!own && !isAdmin()) {
+    showToast("自分の投稿のみ削除できます。");
+    return;
+  }
+
+  if (!confirm("このレビューを削除しますか？この操作は取り消せません。")) {
+    return;
+  }
+
+  if (supabase) {
+    let q = supabase.from("reviews").delete().eq("id", r.id);
+
+    if (!isAdmin()) q = q.eq("user_id", currentUser.id);
+
+    const { data, error } = await q.select("id");
+
+    if (error || !data || data.length === 0) {
+      showToast("削除できませんでした：" +
+        (error?.message || "Supabaseの削除権限を確認してください。"));
+      return;
+    }
+  }
+
+  reviews = reviews.filter(x => String(x.id) !== String(r.id));
+
+  if (!supabase) saveLocal();
+
+  renderAll();
+  showToast("レビューを削除しました。");
+}
     const store = stores.find(s => s.id === id);
     if (!store) return;
 
