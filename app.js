@@ -453,7 +453,23 @@ function renderStores() {
               ? escapeHtml(tr("設置 ", "Cabinets ")) + escapeHtml(store.cabinetCount) + escapeHtml(tr("台", ""))
               : escapeHtml(tr("台数未登録", "No cabinet count"))}</span>
           </div>
-          <div class="store-card-actions">
+
+<div class="store-card-actions">
+  <button class="mini-button primary-mini" data-details="${escapeHtml(store.id)}">
+    ${escapeHtml(tr("詳細・コメント", "Details & Reviews"))}
+  </button>
+  <a class="mini-button" href="${escapeHtml(mapUrl(store))}" target="_blank" rel="noopener noreferrer">
+    ${escapeHtml(tr("Google Mapsで開く ↗", "Open Google Maps ↗"))}
+  </a>
+  ${isAdmin() ? `
+    <button class="mini-button" data-edit-store="${escapeHtml(store.id)}">
+      ${escapeHtml(tr("店舗を編集", "Edit Store"))}
+    </button>
+    <button class="mini-button danger-mini" data-delete-store="${escapeHtml(store.id)}">
+      ${escapeHtml(tr("店舗を削除", "Delete Store"))}
+    </button>
+  ` : ""}
+</div>
             <button class="mini-button primary-mini" data-details="${escapeHtml(store.id)}">
               ${escapeHtml(tr("詳細・コメント", "Details & Reviews"))}
             </button>
