@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10151f">
+  <title>イニDAC 店舗レビュー</title>
+  <meta name="description" content="頭文字D THE ARCADEの設置店舗を探して、筐体メンテナンスや店舗の雰囲気をレビュー。">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#" id="homeLink" aria-label="ホーム">
+      <span class="brand-mark">D</span>
+      <span><strong>イニDAC</strong><small>ARCADE SPOT REVIEW</small></span>
+    </a>
+    <nav>
+      <a href="#stores">店舗を探す</a>
+      <a href="#add-store">店舗を追加</a>
+      <button class="button button-outline" id="siteEditToggle" type="button">編集モード</button>
+      <button class="button button-outline" id="siteEditSave" type="button" hidden>編集を保存</button>
+      <button class="button button-outline" id="authButton">ログイン / 登録</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">INITIAL D THE ARCADE COMMUNITY</p>
+        <h1>次に走る店を、<br><span>レビューで見つけよう。</span></h1>
+        <p class="hero-lead">筐体の整備状態、店舗の雰囲気、店内ドライバーのレベル。プレイヤーの体験を共有して、遊びに行く店舗選びに役立てよう。</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#stores">店舗を探す <span>↓</span></a>
+          <a class="button button-outline" href="#add-store">店舗を登録する</a>
+        </div>
+        <div class="hero-stats">
+          <div><strong id="storeCount">0</strong><span>登録店舗</span></div>
+          <div><strong id="reviewCount">0</strong><span>レビュー</span></div>
+          <div><strong>世界</strong><span>日本・海外対応</span></div>
+        </div>
+      </div>
+      <div class="hero-visual" aria-label="レーシングアーケードのイメージ">
+        <div class="speed-lines"></div>
+        <div class="track-ring ring-one"></div><div class="track-ring ring-two"></div>
+        <div class="hero-badge">FIND YOUR<br><b>NEXT SPOT</b></div>
+        <div class="hero-card">
+          <span class="live-dot"></span> PLAYER-POWERED REVIEWS
+          <p>走る前に、<b>お店の状態</b>をチェック。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="stores">
+      <div class="section-heading">
+        <div><p class="eyebrow">STORE DIRECTORY</p><h2>店舗を探す</h2><p class="muted">店舗ごとにレビューを集約し、平均評価を表示します。</p></div>
+        <span class="result-pill" id="resultCount">0 件</span>
+      </div>
+      <div class="filters panel">
+        <label class="search-field"><span>⌕</span><input id="searchInput" type="search" placeholder="店舗名・住所で検索"></label>
+        <label><span class="field-label">国</span><input id="countryFilter" type="search" placeholder="国名で絞り込み"></label>
+        <label><span class="field-label">都道府県・地域</span><input id="regionFilter" type="search" placeholder="日本国内のみ入力"></label>
+        <label><span class="field-label">並び順</span><select id="sortFilter"><option value="reviews">レビューが多い順</option><option value="maintenance">メンテナンス評価順</option><option value="overall">店舗総合評価順</option><option value="name">店舗名順</option></select></label>
+      </div>
+      <div class="store-grid" id="storeGrid"></div>
+      <div class="empty-state hidden" id="emptyState"><div class="empty-icon">⌕</div><h3>店舗が見つかりません</h3><p>検索条件を変えるか、新しい店舗を登録してください。</p><a class="button button-primary" href="#add-store">店舗を追加する</a></div>
+    </section>
+
+    <section class="section add-section" id="add-store">
+      <div class="section-heading">
+        <div><p class="eyebrow">COMMUNITY CONTRIBUTION</p><h2>店舗を追加する</h2><p class="muted">登録済み店舗がないか確認してから追加してください。</p></div>
+      </div>
+      <div class="two-column">
+        <form class="panel form-panel" id="storeForm">
+          <div class="form-title"><span class="step-number">＋</span><div><h3>店舗情報</h3><p>場所と基本情報を登録</p></div></div>
+          <label>店舗名 <span class="required">必須</span><input name="name" required maxlength="100" placeholder="例：○○ゲームセンター"></label>
+          <div class="form-row">
+            <label>国名 <span class="required">必須</span><input name="country" id="storeCountry" required maxlength="80" placeholder="例：日本 / Malaysia"></label>
+            <label id="regionFieldLabel">都道府県 <span class="optional">日本国内のみ必須</span><input name="region" id="storeRegion" maxlength="80" placeholder="日本の場合：千葉県"></label>
+          </div>
+          <label>住所 <span class="required">必須</span><input name="address" required maxlength="240" placeholder="Google Mapsで検索できる住所"></label>
+          <label>Google Maps URL <span class="optional">任意</span><input name="mapsUrl" type="url" placeholder="https://maps.google.com/..."></label>
+          <label>設置台数 <span class="optional">任意</span><input name="cabinetCount" type="number" min="1" max="100" placeholder="例：4"></label>
+          <label>店舗メモ <span class="optional">任意</span><textarea name="description" rows="3" maxlength="500" placeholder="営業時間、混雑しやすい時間など"></textarea></label>
+          <button class="button button-primary button-full" type="submit">店舗を登録する</button>
+          <p class="form-note" id="storeFormNote">デモモードでは、このブラウザ内にデータを保存します。</p>
+        </form>
+        <aside class="info-panel">
+          <div class="info-icon">⌖</div><h3>Google Mapsで場所を共有</h3><p>住所から地図検索リンクを自動生成できます。正確な位置がわかる場合は、Google Mapsの共有リンクを貼り付けてください。</p>
+          <div class="info-divider"></div>
+          <div class="info-icon">◎</div><h3>店舗の重複に注意</h3><p>同じ店舗が登録済みなら、新規登録ではなく、その店舗のレビューを投稿してください。店舗名・住所をもとに重複を確認します。</p>
+          <div class="info-divider"></div>
+          <div class="info-icon">✦</div><h3>レビューは体験ベースで</h3><p>個人攻撃や未確認情報は避け、筐体や店舗について具体的に書きましょう。</p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section review-section" id="review">
+      <div class="section-heading"><div><p class="eyebrow">PLAYER VOICE</p><h2>レビューを投稿する</h2><p class="muted">店舗を選び、評価とコメントを入力してください。</p></div></div>
+      <form class="panel form-panel review-form" id="reviewForm">
+        <label>店舗 <span class="required">必須</span><select name="storeId" id="reviewStoreSelect" required><option value="">店舗を選択</option></select></label>
+        <div class="rating-layout">
+          <div class="rating-block">
+            <label>メンテナンス評価 <span class="required">必須</span></label>
+            <p class="muted small">ハンドル・ペダル・シフト・画面など</p>
+            <div class="choice-row" id="maintenanceChoices">
+              <label><input type="radio" name="maintenance" value="4" checked><span>良い</span></label>
+              <label><input type="radio" name="maintenance" value="3"><span>普通</span></label>
+              <label><input type="radio" name="maintenance" value="2"><span>少し悪い</span></label>
+              <label><input type="radio" name="maintenance" value="1"><span>悪い</span></label>
+            </div>
+          </div>
+          <div class="rating-block">
+            <label>店舗総合評価 <span class="required">必須</span></label>
+            <p class="muted small">店員の対応・清潔さ・遊びやすさなど</p>
+            <div class="choice-row">
+              <label><input type="radio" name="overall" value="4" checked><span>良い</span></label>
+              <label><input type="radio" name="overall" value="3"><span>普通</span></label>
+              <label><input type="radio" name="overall" value="2"><span>少し悪い</span></label>
+              <label><input type="radio" name="overall" value="1"><span>悪い</span></label>
+            </div>
+          </div>
+        </div>
+        <div class="rating-layout sub-ratings">
+          <div class="rating-block"><label for="driverRank">店内ランク <span class="optional">サブ評価・5段階</span></label><p class="muted small">店内ドライバーの腕前の高さ</p><select name="driverRank" id="driverRank"><option value="">未評価</option><option value="1">1 — 初心者が多い印象</option><option value="2">2 — やや初級寄り</option><option value="3">3 — さまざまな実力</option><option value="4">4 — 上級者が多い印象</option><option value="5">5 — 非常にレベルが高い印象</option></select></div>
+          <div class="rating-block"><label for="connection">通信状況 <span class="optional">海外店舗向け・5段階</span></label><p class="muted small">オンライン対戦の通信品質</p><select name="connection" id="connection"><option value="">未評価</option><option value="1">1 — 不安定</option><option value="2">2 — やや不安定</option><option value="3">3 — 普通</option><option value="4">4 — 良好</option><option value="5">5 — とても良好</option></select></div>
+        </div>
+        <label>コメント <span class="required">必須</span><textarea name="comment" rows="5" required minlength="5" maxlength="1500" placeholder="どの部分が良かったか、気になった点などを具体的に書いてください（5〜1500文字）"></textarea></label>
+        <label>訪問日 <span class="optional">任意</span><input type="date" name="visitedAt" id="visitedAt"></label>
+        <label class="check-label"><input type="checkbox" name="honest" required><span>実際の体験に基づくレビューであり、個人情報や誹謗中傷を含めていません。</span></label>
+        <button class="button button-primary" type="submit">レビューを投稿する</button>
+        <p class="form-note" id="reviewFormNote">デモモードでは、レビューはこのブラウザ内に保存されます。</p>
+      </form>
+    </section>
+
+    <section class="section recent-section">
+      <div class="section-heading"><div><p class="eyebrow">RECENT REVIEWS</p><h2>最近のレビュー</h2></div></div>
+      <div id="recentReviews" class="recent-list"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a class="brand footer-brand" href="#"><span class="brand-mark">D</span><span><strong>イニDAC</strong><small>ARCADE SPOT REVIEW</small></span></a>
+    <p>プレイヤー同士で、もっと良い走行スポットを見つけよう。</p>
+    <small>非公式のファン向けサイトです。SEGAおよび「頭文字D THE ARCADE」の公式サイトではありません。</small>
+  </footer>
+
+  <dialog id="authDialog" class="modal">
+    <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="閉じる">×</button></form>
+    <div class="modal-content">
+      <p class="eyebrow">MEMBER ACCESS</p><h2 id="authTitle">ログイン / 登録</h2>
+      <p class="muted" id="authDescription">登録ユーザーとして店舗やレビューを投稿できます。</p>
+      <div class="auth-tabs"><button type="button" class="active" data-mode="login">ログイン</button><button type="button" data-mode="signup">新規登録</button></div>
+      <form id="authForm" class="form-panel">
+        <label>メールアドレス<input name="email" type="email" required autocomplete="email" placeholder="you@example.com"></label>
+        <label>パスワード<input name="password" type="password" required minlength="8" autocomplete="current-password" placeholder="8文字以上"></label>
+        <button class="button button-primary button-full" id="authSubmit" type="submit">ログイン</button>
+        <p class="form-note" id="authNote">デモモードでは簡易プロフィールをこのブラウザに保存します。</p>
+      </form>
+    </div>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+  <script>
+  // Admin-only visual editor. Public editing requires authenticated admin session.
+  (() => {
+    const KEY = 'inidac-review-page-edits-v1';
+    const toggle = document.getElementById('siteEditToggle');
+    const save = document.getElementById('siteEditSave');
+    const excluded = 'input,textarea,select,button,a,script,style,svg,dialog,[contenteditable="false"]';
+    let editing = false;
+    const ADMIN_EMAIL = 'grgt1462@gmail.com';
+    function isAdmin() { return !!(window.__inidacIsAdmin && window.__inidacIsAdmin(ADMIN_EMAIL)); }
+    function refreshEditorAccess() { const allowed = isAdmin(); toggle.hidden = !allowed; save.hidden = true; if (!allowed && editing) { editing = false; editableTargets().forEach(el => { el.contentEditable = 'false'; el.classList.remove('visual-editing'); }); } }
+    window.addEventListener('inidac-auth-updated', refreshEditorAccess);
+    function editableTargets() {
+      return [...document.querySelectorAll('h1,h2,h3,h4,p,small,span,label,li,.eyebrow,.muted,.field-label,.hero-badge,.hero-card')]
+        .filter(el => !el.closest('button,a,form,nav,dialog') && !el.matches(excluded) && el.children.length < 4);
+    }
+    function applySaved(saved) { if (Array.isArray(saved)) editableTargets().forEach((el, i) => { if (typeof saved[i] === 'string') el.innerHTML = saved[i]; }); }
+    try { applySaved(JSON.parse(localStorage.getItem(KEY) || '[]')); } catch (_) {}
+    let cloudLoaded = false;
+    async function loadCloudEdits() { const db = window.__inidacSupabase; if (!db || cloudLoaded) return; const { data, error } = await db.from('site_content').select('content').eq('id', 1).maybeSingle(); if (!error && data && Array.isArray(data.content)) { applySaved(data.content); cloudLoaded = true; } }
+    window.addEventListener('inidac-auth-updated', () => { loadCloudEdits(); });
+    setTimeout(loadCloudEdits, 1200);
+    toggle.addEventListener('click', () => {
+      if (!isAdmin()) { alert('管理者アカウントでログインしてください。'); return; }
+      editing = !editing;
+      editableTargets().forEach((el, i) => {
+        if (editing) {
+          if (!el.dataset.editId) el.dataset.editId = 'edit-' + i;
+          el.contentEditable = 'true'; el.classList.add('visual-editing'); el.title = 'クリックして文章を編集';
+        } else { el.contentEditable = 'false'; el.classList.remove('visual-editing'); el.removeAttribute('title'); }
+      });
+      toggle.textContent = editing ? '編集モード終了' : '編集モード';
+      save.hidden = !editing;
+      if (editing) alert('編集したい文章をクリックして直接書き換えてください。入力フォームや店舗データの編集とは別の機能です。');
+    });
+    save.addEventListener('click', async () => {
+      if (!isAdmin()) { alert('管理者のみ保存できます。'); return; }
+      const data = editableTargets().map(el => el.innerHTML);
+      localStorage.setItem(KEY, JSON.stringify(data));
+      const db = window.__inidacSupabase;
+      if (db && isAdmin()) { const { error } = await db.from('site_content').upsert({ id: 1, content: data, updated_by: window.__inidacCurrentUser.id, updated_at: new Date().toISOString() }); if (error) { alert('このブラウザには保存しましたが、公開サイトへの保存に失敗しました。Supabaseのsite_contentテーブルと権限設定を確認してください。'); } else { alert('編集内容を公開サイトに保存しました。'); } } else { alert('このブラウザに保存しました。公開サイトへ保存するにはSupabase設定が必要です。'); }
+      editing = false;
+      editableTargets().forEach(el => { el.contentEditable = 'false'; el.classList.remove('visual-editing'); el.removeAttribute('title'); });
+      toggle.textContent = '編集モード'; save.hidden = true;
+
+    });
+    const style = document.createElement('style');
+    style.textContent = '.visual-editing{outline:2px dashed #f59e0b!important;outline-offset:3px;cursor:text;background:rgba(245,158,11,.08)} #siteEditToggle,#siteEditSave{white-space:nowrap}';
+    document.head.appendChild(style);
+    refreshEditorAccess();
+    setInterval(refreshEditorAccess, 1000);
+  })();
+  </script>
+</body>
+</html>
