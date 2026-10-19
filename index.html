@@ -18,8 +18,6 @@
     <nav>
       <a href="#stores">店舗を探す</a>
       <a href="#add-store">店舗を追加</a>
-      <button class="button button-outline" id="siteEditToggle" type="button">編集モード</button>
-      <button class="button button-outline" id="siteEditSave" type="button" hidden>編集を保存</button>
       <button class="button button-outline" id="authButton">ログイン / 登録</button>
     </nav>
   </header>
@@ -58,8 +56,8 @@
       </div>
       <div class="filters panel">
         <label class="search-field"><span>⌕</span><input id="searchInput" type="search" placeholder="店舗名・住所で検索"></label>
-        <label><span class="field-label">国</span><input id="countryFilter" type="search" placeholder="国名で絞り込み"></label>
-        <label><span class="field-label">都道府県・地域</span><input id="regionFilter" type="search" placeholder="日本国内のみ入力"></label>
+        <label><span class="field-label">国</span><input id="countryFilter" type="search" placeholder="国で絞り込み"></label>
+        <label><span class="field-label">都道府県・地域</span><input id="regionFilter" type="search" placeholder="地域で絞り込み"></label>
         <label><span class="field-label">並び順</span><select id="sortFilter"><option value="reviews">レビューが多い順</option><option value="maintenance">メンテナンス評価順</option><option value="overall">店舗総合評価順</option><option value="name">店舗名順</option></select></label>
       </div>
       <div class="store-grid" id="storeGrid"></div>
@@ -75,8 +73,8 @@
           <div class="form-title"><span class="step-number">＋</span><div><h3>店舗情報</h3><p>場所と基本情報を登録</p></div></div>
           <label>店舗名 <span class="required">必須</span><input name="name" required maxlength="100" placeholder="例：○○ゲームセンター"></label>
           <div class="form-row">
-            <label>国名 <span class="required">必須</span><input name="country" id="storeCountry" required maxlength="80" placeholder="例：日本 / Malaysia"></label>
-            <label id="regionFieldLabel">都道府県 <span class="optional">日本国内のみ必須</span><input name="region" id="storeRegion" maxlength="80" placeholder="日本の場合：千葉県"></label>
+            <label>国 <span class="required">必須</span><input name="country" id="storeCountry" required maxlength="80" placeholder="例：日本 / Malaysia"></label>
+            <label id="regionFieldLabel">都道府県・州・地域 <span class="required">日本国内のみ必須</span><input name="region" id="storeRegion" maxlength="80" placeholder="日本の場合：千葉県"></label>
           </div>
           <label>住所 <span class="required">必須</span><input name="address" required maxlength="240" placeholder="Google Mapsで検索できる住所"></label>
           <label>Google Maps URL <span class="optional">任意</span><input name="mapsUrl" type="url" placeholder="https://maps.google.com/..."></label>
@@ -161,58 +159,5 @@
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
-  <script>
-  // Admin-only visual editor. Public editing requires authenticated admin session.
-  (() => {
-    const KEY = 'inidac-review-page-edits-v1';
-    const toggle = document.getElementById('siteEditToggle');
-    const save = document.getElementById('siteEditSave');
-    const excluded = 'input,textarea,select,button,a,script,style,svg,dialog,[contenteditable="false"]';
-    let editing = false;
-    const ADMIN_EMAIL = 'grgt1462@gmail.com';
-    function isAdmin() { return !!(window.__inidacIsAdmin && window.__inidacIsAdmin(ADMIN_EMAIL)); }
-    function refreshEditorAccess() { const allowed = isAdmin(); toggle.hidden = !allowed; save.hidden = true; if (!allowed && editing) { editing = false; editableTargets().forEach(el => { el.contentEditable = 'false'; el.classList.remove('visual-editing'); }); } }
-    window.addEventListener('inidac-auth-updated', refreshEditorAccess);
-    function editableTargets() {
-      return [...document.querySelectorAll('h1,h2,h3,h4,p,small,span,label,li,.eyebrow,.muted,.field-label,.hero-badge,.hero-card')]
-        .filter(el => !el.closest('button,a,form,nav,dialog') && !el.matches(excluded) && el.children.length < 4);
-    }
-    function applySaved(saved) { if (Array.isArray(saved)) editableTargets().forEach((el, i) => { if (typeof saved[i] === 'string') el.innerHTML = saved[i]; }); }
-    try { applySaved(JSON.parse(localStorage.getItem(KEY) || '[]')); } catch (_) {}
-    let cloudLoaded = false;
-    async function loadCloudEdits() { const db = window.__inidacSupabase; if (!db || cloudLoaded) return; const { data, error } = await db.from('site_content').select('content').eq('id', 1).maybeSingle(); if (!error && data && Array.isArray(data.content)) { applySaved(data.content); cloudLoaded = true; } }
-    window.addEventListener('inidac-auth-updated', () => { loadCloudEdits(); });
-    setTimeout(loadCloudEdits, 1200);
-    toggle.addEventListener('click', () => {
-      if (!isAdmin()) { alert('管理者アカウントでログインしてください。'); return; }
-      editing = !editing;
-      editableTargets().forEach((el, i) => {
-        if (editing) {
-          if (!el.dataset.editId) el.dataset.editId = 'edit-' + i;
-          el.contentEditable = 'true'; el.classList.add('visual-editing'); el.title = 'クリックして文章を編集';
-        } else { el.contentEditable = 'false'; el.classList.remove('visual-editing'); el.removeAttribute('title'); }
-      });
-      toggle.textContent = editing ? '編集モード終了' : '編集モード';
-      save.hidden = !editing;
-      if (editing) alert('編集したい文章をクリックして直接書き換えてください。入力フォームや店舗データの編集とは別の機能です。');
-    });
-    save.addEventListener('click', async () => {
-      if (!isAdmin()) { alert('管理者のみ保存できます。'); return; }
-      const data = editableTargets().map(el => el.innerHTML);
-      localStorage.setItem(KEY, JSON.stringify(data));
-      const db = window.__inidacSupabase;
-      if (db && isAdmin()) { const { error } = await db.from('site_content').upsert({ id: 1, content: data, updated_by: window.__inidacCurrentUser.id, updated_at: new Date().toISOString() }); if (error) { alert('このブラウザには保存しましたが、公開サイトへの保存に失敗しました。Supabaseのsite_contentテーブルと権限設定を確認してください。'); } else { alert('編集内容を公開サイトに保存しました。'); } } else { alert('このブラウザに保存しました。公開サイトへ保存するにはSupabase設定が必要です。'); }
-      editing = false;
-      editableTargets().forEach(el => { el.contentEditable = 'false'; el.classList.remove('visual-editing'); el.removeAttribute('title'); });
-      toggle.textContent = '編集モード'; save.hidden = true;
-
-    });
-    const style = document.createElement('style');
-    style.textContent = '.visual-editing{outline:2px dashed #f59e0b!important;outline-offset:3px;cursor:text;background:rgba(245,158,11,.08)} #siteEditToggle,#siteEditSave{white-space:nowrap}';
-    document.head.appendChild(style);
-    refreshEditorAccess();
-    setInterval(refreshEditorAccess, 1000);
-  })();
-  </script>
 </body>
 </html>
