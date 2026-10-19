@@ -12,16 +12,22 @@ const STORAGE_KEY = "inidac-review-data-v1";
 const PROFILE_KEY = "inidac-review-profile-v1";
 const COUNTRIES = [
   {name:"日本", regions:["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"]},
-  {name:"マレーシア", regions:["Johor","Kedah","Kelantan","Kuala Lumpur","Labuan","Melaka","Negeri Sembilan","Pahang","Penang","Perak","Perlis","Putrajaya","Sabah","Sarawak","Selangor","Terengganu"]},
-  {name:"台湾", regions:["台北市","新北市","桃園市","台中市","台南市","高雄市","その他"]},
-  {name:"香港", regions:["香港島","九龍","新界","その他"]},
-  {name:"韓国", regions:["ソウル","釜山","仁川","大邱","その他"]},
-  {name:"シンガポール", regions:["Central","East","North","North-East","West"]},
+  {name:"Malaysia", regions:[Malaysia]},
+  {name:"台湾", regions:["Taiwan"]},
+  {name:"香港", regions:["Hongkong"]},
+  {name:"Indonesia", regions:["Indonesia"]},
+  {name:"Myanmar", regions:["Myanmar"]},
+  {name:"シンガポール", regions:["Singapore"]},
+  {name:"Thailand", regions:["Thailand"]},
+  {name:"Vietnam", regions:["Vietnam"]},
+  {name:"Cambodia", regions:["Cambodia"]},
+  {name:"Macau", regions:["Macau"]},
+  {name:"Austrailia", regions:["Austrailia"]},
   {name:"その他", regions:["その他"]}
 ];
 const demoStores = [
   {id:"demo-1",name:"サンプル・レーシングアーケード",country:"日本",region:"千葉県",address:"千葉県千葉市",mapsUrl:"",cabinetCount:4,description:"これは表示イメージ用のサンプル店舗です。実在店舗の情報ではありません。",createdAt:"2026-10-01T10:00:00.000Z",demo:true},
-  {id:"demo-2",name:"Sample Arcade KL",country:"マレーシア",region:"Kuala Lumpur",address:"Kuala Lumpur, Malaysia",mapsUrl:"",cabinetCount:2,description:"Sample data for layout preview. Not a real listing.",createdAt:"2026-10-02T10:00:00.000Z",demo:true}
+  {id:"demo-2",name:"Sample Arcade KL",country:"Malaysia",region:"Malaysia",address:"Kuala Lumpur, Malaysia",mapsUrl:"",cabinetCount:2,description:"Sample data for layout preview. Not a real listing.",createdAt:"2026-10-02T10:00:00.000Z",demo:true}
 ];
 const demoReviews = [
   {id:"demo-r1",storeId:"demo-1",maintenance:4,overall:3,driverRank:4,connection:null,comment:"【サンプルレビュー】ハンドルやペダルの状態などを、ここに実際の体験として記入します。",visitedAt:"2026-10-10",createdAt:"2026-10-10T10:00:00.000Z",author:"サンプルユーザー",demo:true},
