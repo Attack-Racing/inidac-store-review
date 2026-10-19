@@ -1,4 +1,4 @@
-
+(function () {
 /* イニDAC 店舗レビュー
    Supabase対応 / 日本語・英語 / 店舗・レビュー管理
 */
@@ -1747,4 +1747,4 @@ setAuthMode("login");
 loadData().then(() => {
   applyLanguage();
 });
-　
+})();　
