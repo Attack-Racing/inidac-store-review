@@ -126,8 +126,9 @@
           <div class="rating-block"><label for="driverRank">店内ランク <span class="optional">サブ評価・5段階</span></label><p class="muted small">店内ドライバーの腕前の高さ</p><select name="driverRank" id="driverRank"><option value="">未評価</option><option value="1">1 — 初心者が多い印象</option><option value="2">2 — やや初級寄り</option><option value="3">3 — さまざまな実力</option><option value="4">4 — 上級者が多い印象</option><option value="5">5 — 非常にレベルが高い印象</option></select></div>
           <div class="rating-block"><label for="connection">通信状況 <span class="optional">海外店舗向け・5段階</span></label><p class="muted small">オンライン対戦の通信品質</p><select name="connection" id="connection"><option value="">未評価</option><option value="1">1 — 不安定</option><option value="2">2 — やや不安定</option><option value="3">3 — 普通</option><option value="4">4 — 良好</option><option value="5">5 — とても良好</option></select></div>
         </div>
-        <label>コメント（日本語） <span class="required">必須</span><textarea name="comment" rows="4" required minlength="5" maxlength="1500" placeholder="体験した内容を日本語で入力"></textarea></label>
-        <label>Comment (English) <span class="optional">Optional / 任意</span><textarea name="commentEn" rows="4" maxlength="1500" placeholder="You may also write your review in English."></textarea></label>
+                <label>コメント / Comment <span class="optional">任意 / Optional</span>
+          <textarea name="comment" rows="4" maxlength="1500" placeholder="日本語でも英語でも自由に入力できます / Write in Japanese or English"></textarea>
+        </label>
         <label>訪問日 <span class="optional">任意</span><input type="date" name="visitedAt" id="visitedAt"></label>
         <label class="check-label"><input type="checkbox" name="honest" required><span>実際の体験に基づくレビューであり、個人情報や誹謗中傷を含めていません。</span></label>
         <button class="button button-primary" type="submit">レビューを投稿する</button>
