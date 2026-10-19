@@ -1359,9 +1359,17 @@ $("#countryFilter")?.addEventListener("input", () => {
 
 $("#regionFilter")?.addEventListener("input", renderStores);
 $("#regionFilter")?.addEventListener("change", renderStores);
-$("#searchInput")?.addEventListener("input", renderStores);
 $("#sortFilter")?.addEventListener("change", renderStores);
 
+// 検索欄が再生成されても検索できるようにする
+document.addEventListener("input", event => {
+  if (
+    event.target instanceof Element &&
+    event.target.matches("#searchInput")
+  ) {
+    renderStores();
+  }
+});
 /* 店舗登録 */
 $("#storeForm")?.addEventListener("submit", async event => {
   event.preventDefault();
