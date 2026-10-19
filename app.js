@@ -1,6 +1,8 @@
+
 (function () {
 /* イニDAC 店舗レビュー
    Supabase対応 / 日本語・英語 / 店舗・レビュー管理
+   コメントは日本語・英語共通で reviews.comment に保存
 */
 
 const CONFIG = {
@@ -82,7 +84,6 @@ const demoReviews = [
     driverRank: 4,
     connection: null,
     comment: "【サンプルレビュー】ハンドルやペダルの状態などを、ここに実際の体験として記入します。",
-    commentEn: "",
     visitedAt: "2026-10-10",
     createdAt: "2026-10-10T10:00:00.000Z",
     author: "サンプルユーザー",
@@ -96,7 +97,6 @@ const demoReviews = [
     driverRank: 3,
     connection: null,
     comment: "【サンプルレビュー】店舗の雰囲気や待ち時間などの例です。実際の評価ではありません。",
-    commentEn: "",
     visitedAt: "2026-10-12",
     createdAt: "2026-10-12T10:00:00.000Z",
     author: "サンプルユーザー",
@@ -110,7 +110,6 @@ const demoReviews = [
     driverRank: 4,
     connection: 2,
     comment: "[Sample review] Example text only. Replace with a real experience before relying on the rating.",
-    commentEn: "",
     visitedAt: "2026-10-11",
     createdAt: "2026-10-11T10:00:00.000Z",
     author: "Sample User",
@@ -132,10 +131,9 @@ function tr(ja, en) {
   return currentLanguage === "en" ? en : ja;
 }
 
+/* 日本語・英語で同じコメント本文を表示する */
 function displayedComment(review) {
-  return currentLanguage === "en" && review.commentEn
-    ? review.commentEn
-    : review.comment;
+  return review.comment || "";
 }
 
 function isConfigured() {
@@ -197,10 +195,7 @@ function readLocal() {
 }
 
 function saveLocal() {
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify({ stores, reviews })
-  );
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ stores, reviews }));
 }
 
 function average(list, key) {
@@ -264,16 +259,25 @@ function dateLabel(value) {
 
   return Number.isNaN(date.getTime())
     ? value
-    : date.toLocaleDateString(
-        currentLanguage === "en" ? "en-MY" : "ja-JP"
-      );
+    : date.toLocaleDateString(currentLanguage === "en" ? "en-MY" : "ja-JP");
 }
 
-/* --------------------------------------------------
-   国・地域の入力候補
-   国はLOCATIONSの指定一覧だけを使用する。
-   -------------------------------------------------- */
+/* コメント欄を1つに統一する。
+   HTMLに旧commentEn欄が残っていても、画面から取り除く。 */
+function removeSeparateEnglishCommentField() {
+  document.querySelectorAll(
+    '#reviewForm [name="commentEn"], #reviewForm [name="comment_en"]'
+  ).forEach(element => {
+    const label = element.closest("label");
+    if (label) {
+      label.remove();
+    } else {
+      element.remove();
+    }
+  });
+}
 
+/* 国・地域の入力候補 */
 function setDatalist(id, values) {
   let list = document.getElementById(id);
 
@@ -297,19 +301,13 @@ function setDatalist(id, values) {
 function populateCountries() {
   const storeCountry = $("#storeCountry");
   const countryFilter = $("#countryFilter");
-
   const countries = LOCATIONS.map(location => location.name);
 
   setDatalist("storeCountryOptions", countries);
   setDatalist("countryFilterOptions", countries);
 
-  if (storeCountry) {
-    storeCountry.setAttribute("list", "storeCountryOptions");
-  }
-
-  if (countryFilter) {
-    countryFilter.setAttribute("list", "countryFilterOptions");
-  }
+  if (storeCountry) storeCountry.setAttribute("list", "storeCountryOptions");
+  if (countryFilter) countryFilter.setAttribute("list", "countryFilterOptions");
 
   populateRegions();
 }
@@ -320,37 +318,23 @@ function populateRegions() {
   const storeRegion = $("#storeRegion");
   const regionFilter = $("#regionFilter");
 
-  // 店舗登録フォーム
   const storeCountryName = storeCountry?.value.trim() || "";
-  const storeLocation = LOCATIONS.find(
-    location => location.name === storeCountryName
-  );
-
+  const storeLocation = LOCATIONS.find(location => location.name === storeCountryName);
   const storeRegions = storeLocation
     ? storeLocation.regions
     : LOCATIONS.flatMap(location => location.regions);
 
   setDatalist("storeRegionOptions", storeRegions);
+  if (storeRegion) storeRegion.setAttribute("list", "storeRegionOptions");
 
-  if (storeRegion) {
-    storeRegion.setAttribute("list", "storeRegionOptions");
-  }
-
-  // 店舗検索フォーム
   const filterCountryName = countryFilter?.value.trim() || "";
-  const filterLocation = LOCATIONS.find(
-    location => location.name === filterCountryName
-  );
-
+  const filterLocation = LOCATIONS.find(location => location.name === filterCountryName);
   const filterRegions = filterLocation
     ? filterLocation.regions
     : LOCATIONS.flatMap(location => location.regions);
 
   setDatalist("regionFilterOptions", filterRegions);
-
-  if (regionFilter) {
-    regionFilter.setAttribute("list", "regionFilterOptions");
-  }
+  if (regionFilter) regionFilter.setAttribute("list", "regionFilterOptions");
 
   if (
     regionFilter &&
@@ -362,10 +346,7 @@ function populateRegions() {
   }
 }
 
-/* --------------------------------------------------
-   店舗・レビューの描画
-   -------------------------------------------------- */
-
+/* 店舗・レビューの描画 */
 function refreshReviewStoreSelect() {
   const select = $("#reviewStoreSelect");
   if (!select) return;
@@ -380,9 +361,7 @@ function refreshReviewStoreSelect() {
       </option>
     `).join("");
 
-  if (stores.some(store => store.id === previous)) {
-    select.value = previous;
-  }
+  if (stores.some(store => store.id === previous)) select.value = previous;
 }
 
 function renderStats() {
@@ -411,31 +390,20 @@ function renderStores() {
     const matchesRegion = !region || String(store.region || "") === region;
 
     const searchable = [
-      store.name,
-      store.address,
-      store.country,
-      store.region
+      store.name, store.address, store.country, store.region
     ].join(" ").toLocaleLowerCase();
 
-    return matchesCountry && matchesRegion &&
-      (!query || searchable.includes(query));
+    return matchesCountry && matchesRegion && (!query || searchable.includes(query));
   });
 
   list.sort((a, b) => {
-    if (sort === "name") {
-      return a.name.localeCompare(b.name, "ja");
-    }
-
+    if (sort === "name") return a.name.localeCompare(b.name, "ja");
     if (sort === "maintenance") {
-      return (storeScore(b, "maintenance") ?? 0) -
-        (storeScore(a, "maintenance") ?? 0);
+      return (storeScore(b, "maintenance") ?? 0) - (storeScore(a, "maintenance") ?? 0);
     }
-
     if (sort === "overall") {
-      return (storeScore(b, "overall") ?? 0) -
-        (storeScore(a, "overall") ?? 0);
+      return (storeScore(b, "overall") ?? 0) - (storeScore(a, "overall") ?? 0);
     }
-
     return getStoreReviews(b.id).length - getStoreReviews(a.id).length;
   });
 
@@ -445,9 +413,7 @@ function renderStores() {
       : `${list.length} 件`;
   }
 
-  if ($("#emptyState")) {
-    $("#emptyState").classList.toggle("hidden", list.length !== 0);
-  }
+  if ($("#emptyState")) $("#emptyState").classList.toggle("hidden", list.length !== 0);
 
   storeGrid.innerHTML = list.map(store => {
     const storeReviews = getStoreReviews(store.id);
@@ -460,18 +426,13 @@ function renderStores() {
           <span class="store-code">ARCADE SPOT / ${escapeHtml(store.country)}</span>
           <span class="store-icon">⌖</span>
         </div>
-
         <div class="store-card-body">
           <h3>${escapeHtml(store.name)}</h3>
-
           <div class="store-location">
             <span>⌖</span>
-            <span>
-              ${escapeHtml(store.country)}${store.region ? "・" + escapeHtml(store.region) : ""}
-              <br>${escapeHtml(store.address || "")}
-            </span>
+            <span>${escapeHtml(store.country)}${store.region ? "・" + escapeHtml(store.region) : ""}
+              <br>${escapeHtml(store.address || "")}</span>
           </div>
-
           <div class="store-rating-row">
             <div class="rating-chip">
               <small>${escapeHtml(tr("メンテナンス", "Maintenance"))}</small>
@@ -479,7 +440,6 @@ function renderStores() {
                 <span class="rating-word">${escapeHtml(labelForScore(maintenance))}</span>
               </strong>
             </div>
-
             <div class="rating-chip">
               <small>${escapeHtml(tr("店舗総合評価", "Overall Store Rating"))}</small>
               <strong>${fmtAverage(overall)}
@@ -487,25 +447,17 @@ function renderStores() {
               </strong>
             </div>
           </div>
-
           <div class="store-meta">
-            <span>${currentLanguage === "en"
-              ? countLabel(storeReviews.length)
-              : "レビュー " + countLabel(storeReviews.length)}</span>
+            <span>${currentLanguage === "en" ? countLabel(storeReviews.length) : "レビュー " + countLabel(storeReviews.length)}</span>
             <span>${store.cabinetCount
               ? escapeHtml(tr("設置 ", "Cabinets ")) + escapeHtml(store.cabinetCount) + escapeHtml(tr("台", ""))
               : escapeHtml(tr("台数未登録", "No cabinet count"))}</span>
           </div>
-
           <div class="store-card-actions">
-            <button class="mini-button primary-mini"
-              data-details="${escapeHtml(store.id)}">
+            <button class="mini-button primary-mini" data-details="${escapeHtml(store.id)}">
               ${escapeHtml(tr("詳細・コメント", "Details & Reviews"))}
             </button>
-
-            <a class="mini-button"
-              href="${escapeHtml(mapUrl(store))}"
-              target="_blank" rel="noopener noreferrer">
+            <a class="mini-button" href="${escapeHtml(mapUrl(store))}" target="_blank" rel="noopener noreferrer">
               ${escapeHtml(tr("Google Mapsで開く ↗", "Open Google Maps ↗"))}
             </a>
           </div>
@@ -529,46 +481,28 @@ function renderRecent() {
   container.innerHTML = recent.length
     ? recent.map(review => {
         const store = stores.find(item => item.id === review.storeId);
-
         return `
           <article class="recent-review">
             <div class="recent-review-head">
               <h3>${escapeHtml(store?.name || tr("削除済み店舗", "Deleted store"))}</h3>
               <time>${escapeHtml(dateLabel(review.visitedAt))}</time>
             </div>
-
             <div class="review-badges">
-              <span class="review-badge">
-                ${escapeHtml(tr("整備：", "Maintenance: "))}${escapeHtml(labelForScore(Number(review.maintenance)))}
-              </span>
-              <span class="review-badge">
-                ${escapeHtml(tr("店舗：", "Store: "))}${escapeHtml(labelForScore(Number(review.overall)))}
-              </span>
-              ${review.driverRank
-                ? `<span class="review-badge">${escapeHtml(tr("店内ランク ", "Local Skill "))}${review.driverRank}/5</span>`
-                : ""}
-              ${review.connection
-                ? `<span class="review-badge">${escapeHtml(tr("通信 ", "Connection "))}${review.connection}/5</span>`
-                : ""}
+              <span class="review-badge">${escapeHtml(tr("整備：", "Maintenance: "))}${escapeHtml(labelForScore(Number(review.maintenance)))}</span>
+              <span class="review-badge">${escapeHtml(tr("店舗：", "Store: "))}${escapeHtml(labelForScore(Number(review.overall)))}</span>
+              ${review.driverRank ? `<span class="review-badge">${escapeHtml(tr("店内ランク ", "Local Skill "))}${review.driverRank}/5</span>` : ""}
+              ${review.connection ? `<span class="review-badge">${escapeHtml(tr("通信 ", "Connection "))}${review.connection}/5</span>` : ""}
             </div>
-
             <p>${escapeHtml(displayedComment(review))}</p>
-
             <small class="muted">
               ${escapeHtml(tr("投稿者：", "By: "))}${escapeHtml(review.author || "メンバー")}
-              · ${escapeHtml(new Date(review.createdAt).toLocaleDateString(
-                currentLanguage === "en" ? "en-MY" : "ja-JP"
-              ))}
+              · ${escapeHtml(new Date(review.createdAt).toLocaleDateString(currentLanguage === "en" ? "en-MY" : "ja-JP"))}
             </small>
-
             <div class="review-actions">${reviewActions(review)}</div>
           </article>
         `;
       }).join("")
-    : `<div class="no-reviews">${escapeHtml(tr(
-        "まだレビューはありません。最初のレビューを投稿してください。",
-        "No reviews yet. Be the first to post a review."
-      ))}</div>`;
+    : `<div class="no-reviews">${escapeHtml(tr("まだレビューはありません。最初のレビューを投稿してください。", "No reviews yet. Be the first to post a review."))}</div>`;
 }
 
 function renderAll() {
@@ -576,10 +510,7 @@ function renderAll() {
   renderRecent();
 }
 
-/* --------------------------------------------------
-   ログイン・ユーザー権限
-   -------------------------------------------------- */
-
+/* ログイン・ユーザー権限 */
 function getCurrentProfile() {
   try {
     return JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
@@ -598,18 +529,15 @@ function updateAuthButton() {
       : tr("ログイン / 登録", "Login / Sign Up");
   }
 
-  window.__inidacIsAdmin = email =>
-    Boolean(
-      supabase &&
-      currentUser &&
-      ADMIN_EMAILS.includes(String(currentUser.email || "").toLowerCase()) &&
-      String(email || "").toLowerCase() ===
-        String(currentUser.email || "").toLowerCase()
-    );
+  window.__inidacIsAdmin = email => Boolean(
+    supabase &&
+    currentUser &&
+    ADMIN_EMAILS.includes(String(currentUser.email || "").toLowerCase()) &&
+    String(email || "").toLowerCase() === String(currentUser.email || "").toLowerCase()
+  );
 
   window.__inidacSupabase = supabase;
   window.__inidacCurrentUser = currentUser;
-
   window.dispatchEvent(new Event("inidac-auth-updated"));
 }
 
@@ -622,13 +550,7 @@ function isAdmin() {
 }
 
 function canManageReview(review) {
-  return Boolean(
-    currentUser &&
-    (
-      review.authorId === currentUser.id ||
-      isAdmin()
-    )
-  );
+  return Boolean(currentUser && (review.authorId === currentUser.id || isAdmin()));
 }
 
 function reviewActions(review) {
@@ -643,12 +565,8 @@ function reviewActions(review) {
       <button class="mini-button" data-edit-review="${escapeHtml(review.id)}">${escapeHtml(tr("編集", "Edit"))}</button>
       <button class="mini-button danger-mini" data-delete-review="${escapeHtml(review.id)}">${escapeHtml(tr("削除", "Delete"))}</button>
     ` : ""}
-    ${isAdmin() && !own ? `
-      <button class="mini-button danger-mini" data-delete-review="${escapeHtml(review.id)}">${escapeHtml(tr("運営削除", "Admin delete"))}</button>
-    ` : ""}
-    ${!own ? `
-      <button class="mini-button" data-report-review="${escapeHtml(review.id)}">${escapeHtml(tr("問題を報告", "Report issue"))}</button>
-    ` : ""}
+    ${isAdmin() && !own ? `<button class="mini-button danger-mini" data-delete-review="${escapeHtml(review.id)}">${escapeHtml(tr("運営削除", "Admin delete"))}</button>` : ""}
+    ${!own ? `<button class="mini-button" data-report-review="${escapeHtml(review.id)}">${escapeHtml(tr("問題を報告", "Report issue"))}</button>` : ""}
   `;
 }
 
@@ -659,14 +577,10 @@ function requireUser() {
     showToast(tr("投稿するにはログイン / 登録してください。", "Please sign in to post."));
     return false;
   }
-
   return true;
 }
 
-/* --------------------------------------------------
-   Supabaseデータ変換・読み込み
-   -------------------------------------------------- */
-
+/* Supabaseデータ変換・読み込み */
 function fromDbStore(store) {
   return {
     id: store.id,
@@ -689,8 +603,7 @@ function fromDbReview(review) {
     overall: review.overall,
     driverRank: review.driver_rank,
     connection: review.connection,
-    comment: review.comment,
-    commentEn: review.comment_en || "",
+    comment: review.comment || "",
     visitedAt: review.visited_at,
     createdAt: review.created_at,
     author: review.author_name || "メンバー",
@@ -701,16 +614,10 @@ function fromDbReview(review) {
 async function loadData() {
   try {
     if (isConfigured()) {
-      supabase = window.supabase.createClient(
-        CONFIG.supabaseUrl,
-        CONFIG.supabaseAnonKey
-      );
+      supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
 
       const sessionResult = await supabase.auth.getSession();
-
-      if (sessionResult.error) {
-        console.error("認証状態を取得できませんでした:", sessionResult.error);
-      }
+      if (sessionResult.error) console.error("認証状態を取得できませんでした:", sessionResult.error);
 
       currentUser = sessionResult.data?.session?.user || null;
 
@@ -729,13 +636,10 @@ async function loadData() {
         console.error("Supabase読み込みエラー:", storesResult.error || reviewsResult.error);
         stores = [];
         reviews = [];
-
-        showToast(
-          tr(
-            "データを読み込めません。Supabaseのテーブル・権限設定を確認してください。",
-            "Could not load data. Check Supabase tables and permissions."
-          )
-        );
+        showToast(tr(
+          "データを読み込めません。Supabaseのテーブル・権限設定を確認してください。",
+          "Could not load data. Check Supabase tables and permissions."
+        ));
       } else {
         stores = (storesResult.data || []).map(fromDbStore);
         reviews = (reviewsResult.data || []).map(fromDbReview);
@@ -747,14 +651,12 @@ async function loadData() {
           "Online mode: registered users can add stores."
         );
       }
-
       if ($("#reviewFormNote")) {
         $("#reviewFormNote").textContent = tr(
           "オンラインモード：ログインしてレビューを投稿できます。",
           "Online mode: sign in to post reviews."
         );
       }
-
       if ($("#authNote")) {
         $("#authNote").textContent = tr(
           "Supabase Authでメールアドレスとパスワードを管理します。",
@@ -773,14 +675,12 @@ async function loadData() {
           "Demo mode: data is saved only in this browser and is not shared."
         );
       }
-
       if ($("#reviewFormNote")) {
         $("#reviewFormNote").textContent = tr(
           "デモモード：レビューはこのブラウザ内だけに保存されます。他の人には共有されません。",
           "Demo mode: reviews are saved only in this browser and are not shared."
         );
       }
-
       if ($("#authNote")) {
         $("#authNote").textContent = tr(
           "デモモードの簡易プロフィールです。実際の認証ではありません。",
@@ -790,30 +690,23 @@ async function loadData() {
     }
   } catch (error) {
     console.error("データ読み込みエラー:", error);
-    showToast(tr(
-      "初期化に失敗しました。ページを再読み込みしてください。",
-      "Initialization failed. Please reload the page."
-    ));
-
+    showToast(tr("初期化に失敗しました。ページを再読み込みしてください。", "Initialization failed. Please reload the page."));
     stores = [];
     reviews = [];
   }
 
   populateCountries();
+  removeSeparateEnglishCommentField();
   updateAuthButton();
   renderAll();
 }
 
-/* --------------------------------------------------
-   店舗登録
-   -------------------------------------------------- */
-
+/* 店舗登録 */
 async function addStore(data) {
   const duplicate = stores.find(store =>
     store.name.trim().toLowerCase() === data.name.trim().toLowerCase() &&
     store.country.trim().toLowerCase() === data.country.trim().toLowerCase() &&
-    String(store.region || "").trim().toLowerCase() ===
-      String(data.region || "").trim().toLowerCase()
+    String(store.region || "").trim().toLowerCase() === String(data.region || "").trim().toLowerCase()
   );
 
   if (duplicate) {
@@ -825,11 +718,7 @@ async function addStore(data) {
     return;
   }
 
-  const store = {
-    id: uid(),
-    ...data,
-    createdAt: new Date().toISOString()
-  };
+  const store = { id: uid(), ...data, createdAt: new Date().toISOString() };
 
   if (supabase) {
     if (!currentUser) {
@@ -837,20 +726,16 @@ async function addStore(data) {
       return;
     }
 
-    const { data: created, error } = await supabase
-      .from("stores")
-      .insert({
-        name: store.name,
-        country: store.country,
-        region: store.region || "",
-        address: store.address,
-        maps_url: store.mapsUrl || null,
-        cabinet_count: store.cabinetCount || null,
-        description: store.description || null,
-        created_by: currentUser.id
-      })
-      .select()
-      .single();
+    const { data: created, error } = await supabase.from("stores").insert({
+      name: store.name,
+      country: store.country,
+      region: store.region || "",
+      address: store.address,
+      maps_url: store.mapsUrl || null,
+      cabinet_count: store.cabinetCount || null,
+      description: store.description || null,
+      created_by: currentUser.id
+    }).select().single();
 
     if (error) {
       console.error("店舗登録エラー:", error);
@@ -870,10 +755,7 @@ async function addStore(data) {
   showToast(tr("店舗を登録しました。", "Store added."));
 }
 
-/* --------------------------------------------------
-   レビュー投稿
-   -------------------------------------------------- */
-
+/* レビュー投稿：comment列だけに保存 */
 async function addReview(data) {
   if (!requireUser()) return;
 
@@ -892,6 +774,7 @@ async function addReview(data) {
   const review = {
     id: uid(),
     ...data,
+    comment: String(data.comment || "").trim(),
     createdAt: new Date().toISOString(),
     author: currentUser.email || "メンバー",
     authorId: currentUser.id
@@ -905,7 +788,6 @@ async function addReview(data) {
       driver_rank: review.driverRank,
       connection: review.connection,
       comment: review.comment,
-      comment_en: review.commentEn || null,
       visited_at: review.visitedAt || null,
       author_name: currentUser.email?.split("@")[0] || "メンバー",
       user_id: currentUser.id
@@ -939,10 +821,7 @@ async function addReview(data) {
   showToast(tr("レビューを投稿しました。", "Review posted."));
 }
 
-/* --------------------------------------------------
-   レビュー編集
-   -------------------------------------------------- */
-
+/* レビュー編集：編集画面にもコメント欄は1つだけ */
 async function editReview(id) {
   if (!requireUser()) return;
 
@@ -960,17 +839,14 @@ async function editReview(id) {
     <form method="dialog" class="modal-close-row">
       <button class="icon-button" aria-label="閉じる">×</button>
     </form>
-
     <div class="modal-content">
       <h2>${escapeHtml(tr("レビューを編集", "Edit Review"))}</h2>
-
       <form id="editReviewForm" class="form-panel">
         <label>
           ${escapeHtml(tr("店舗", "Store"))}
           <select name="storeId" required>
             ${stores.map(store => `
-              <option value="${escapeHtml(store.id)}"
-                ${store.id === review.storeId ? "selected" : ""}>
+              <option value="${escapeHtml(store.id)}" ${store.id === review.storeId ? "selected" : ""}>
                 ${escapeHtml(store.name)}（${escapeHtml(store.country)}${store.region ? "・" + escapeHtml(store.region) : ""}）
               </option>
             `).join("")}
@@ -987,7 +863,6 @@ async function editReview(id) {
               `).join("")}
             </select>
           </label>
-
           <label>${escapeHtml(tr("店舗総合評価", "Overall Store Rating"))}
             <select name="overall">
               ${[4, 3, 2, 1].map(number => `
@@ -1004,20 +879,15 @@ async function editReview(id) {
             <select name="driverRank">
               <option value="">${escapeHtml(tr("未評価", "Not rated"))}</option>
               ${[5, 4, 3, 2, 1].map(number => `
-                <option value="${number}" ${Number(review.driverRank) === number ? "selected" : ""}>
-                  ${number}/5
-                </option>
+                <option value="${number}" ${Number(review.driverRank) === number ? "selected" : ""}>${number}/5</option>
               `).join("")}
             </select>
           </label>
-
           <label>${escapeHtml(tr("通信状況", "Connection Quality"))}
             <select name="connection">
               <option value="">${escapeHtml(tr("未評価", "Not rated"))}</option>
               ${[5, 4, 3, 2, 1].map(number => `
-                <option value="${number}" ${Number(review.connection) === number ? "selected" : ""}>
-                  ${number}/5
-                </option>
+                <option value="${number}" ${Number(review.connection) === number ? "selected" : ""}>${number}/5</option>
               `).join("")}
             </select>
           </label>
@@ -1027,12 +897,8 @@ async function editReview(id) {
           <input type="date" name="visitedAt" value="${escapeHtml(review.visitedAt || "")}">
         </label>
 
-        <label>${escapeHtml(tr("コメント（日本語）", "Comment (Japanese)"))}
-          <textarea name="comment" minlength="5" maxlength="1500" required>${escapeHtml(review.comment)}</textarea>
-        </label>
-
-        <label>Comment (English)
-          <textarea name="commentEn" maxlength="1500">${escapeHtml(review.commentEn || "")}</textarea>
+        <label>${escapeHtml(tr("コメント", "Comment"))}
+          <textarea name="comment" minlength="5" maxlength="1500" required>${escapeHtml(review.comment || "")}</textarea>
         </label>
 
         <button class="button button-primary" type="submit">
@@ -1055,13 +921,10 @@ async function editReview(id) {
       storeId: String(formData.get("storeId")),
       maintenance: Number(formData.get("maintenance")),
       overall: Number(formData.get("overall")),
-      driverRank: formData.get("driverRank")
-        ? Number(formData.get("driverRank")) : null,
-      connection: formData.get("connection")
-        ? Number(formData.get("connection")) : null,
+      driverRank: formData.get("driverRank") ? Number(formData.get("driverRank")) : null,
+      connection: formData.get("connection") ? Number(formData.get("connection")) : null,
       visitedAt: String(formData.get("visitedAt") || ""),
-      comment: String(formData.get("comment") || "").trim(),
-      commentEn: String(formData.get("commentEn") || "").trim()
+      comment: String(formData.get("comment") || "").trim()
     };
 
     if (patch.comment.length < 5) {
@@ -1077,8 +940,7 @@ async function editReview(id) {
         driver_rank: patch.driverRank,
         connection: patch.connection,
         visited_at: patch.visitedAt || null,
-        comment: patch.comment,
-        comment_en: patch.commentEn || null
+        comment: patch.comment
       };
 
       const { data, error } = await supabase
@@ -1107,10 +969,7 @@ async function editReview(id) {
   });
 }
 
-/* --------------------------------------------------
-   レビュー削除・問題報告
-   -------------------------------------------------- */
-
+/* レビュー削除・問題報告 */
 async function deleteReview(id) {
   const review = reviews.find(item => item.id === id);
 
@@ -1128,10 +987,7 @@ async function deleteReview(id) {
 
   if (supabase) {
     let query = supabase.from("reviews").delete().eq("id", id);
-
-    if (!isAdmin()) {
-      query = query.eq("user_id", currentUser.id);
-    }
+    if (!isAdmin()) query = query.eq("user_id", currentUser.id);
 
     const { error } = await query;
 
@@ -1143,7 +999,6 @@ async function deleteReview(id) {
   }
 
   reviews = reviews.filter(item => item.id !== id);
-
   if (!supabase) saveLocal();
 
   renderAll();
@@ -1156,23 +1011,19 @@ async function reportReview(id) {
   const review = reviews.find(item => item.id === id);
   if (!review) return;
 
-  const reason = prompt(
-    tr(
-      "問題の内容を入力してください（例：誹謗中傷、虚偽情報、個人情報）",
-      "Describe the problem (e.g. abuse, false information, personal information)."
-    )
-  );
+  const reason = prompt(tr(
+    "問題の内容を入力してください（例：誹謗中傷、虚偽情報、個人情報）",
+    "Describe the problem (e.g. abuse, false information, personal information)."
+  ));
 
   if (!reason || !reason.trim()) return;
 
   if (supabase) {
-    const { error } = await supabase
-      .from("review_reports")
-      .insert({
-        review_id: id,
-        reporter_id: currentUser.id,
-        reason: reason.trim().slice(0, 500)
-      });
+    const { error } = await supabase.from("review_reports").insert({
+      review_id: id,
+      reporter_id: currentUser.id,
+      reason: reason.trim().slice(0, 500)
+    });
 
     if (error) {
       console.error("報告エラー:", error);
@@ -1180,35 +1031,25 @@ async function reportReview(id) {
       return;
     }
   } else {
-    const reports = JSON.parse(
-      localStorage.getItem("inidac-review-reports-v1") || "[]"
-    );
-
+    const reports = JSON.parse(localStorage.getItem("inidac-review-reports-v1") || "[]");
     reports.push({
       reviewId: id,
       reporterId: currentUser.id,
       reason: reason.trim(),
       createdAt: new Date().toISOString()
     });
-
     localStorage.setItem("inidac-review-reports-v1", JSON.stringify(reports));
   }
 
   showToast(tr("報告を受け付けました。", "Report submitted."));
 }
 
-/* --------------------------------------------------
-   店舗詳細
-   -------------------------------------------------- */
-
+/* 店舗詳細 */
 function openDetails(id) {
   const store = stores.find(item => item.id === id);
   if (!store) return;
 
-  const storeReviews = getStoreReviews(id).sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-  );
-
+  const storeReviews = getStoreReviews(id).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   const maintenance = storeScore(store, "maintenance");
   const overall = storeScore(store, "overall");
 
@@ -1219,34 +1060,24 @@ function openDetails(id) {
     <form method="dialog" class="modal-close-row">
       <button class="icon-button" aria-label="閉じる">×</button>
     </form>
-
     <div class="detail-content">
       <p class="eyebrow">STORE DETAIL</p>
       <h2>${escapeHtml(store.name)}</h2>
-
       <div class="store-location">
         <span>⌖</span>
-        <span>
-          ${escapeHtml(store.country)}${store.region ? "・" + escapeHtml(store.region) : ""}
-          <br>${escapeHtml(store.address || "")}
-        </span>
+        <span>${escapeHtml(store.country)}${store.region ? "・" + escapeHtml(store.region) : ""}
+          <br>${escapeHtml(store.address || "")}</span>
       </div>
-
       <div class="detail-links">
-        <a class="button button-outline"
-          href="${escapeHtml(mapUrl(store))}"
-          target="_blank" rel="noopener noreferrer">
+        <a class="button button-outline" href="${escapeHtml(mapUrl(store))}" target="_blank" rel="noopener noreferrer">
           ${escapeHtml(tr("Google Mapsで開く ↗", "Open Google Maps ↗"))}
         </a>
-
         <button class="button button-primary" data-review-this="${escapeHtml(store.id)}">
           ${escapeHtml(tr("この店舗をレビュー", "Review this store"))}
         </button>
       </div>
 
-      ${store.description
-        ? `<p class="sub-info">${escapeHtml(store.description)}</p>`
-        : ""}
+      ${store.description ? `<p class="sub-info">${escapeHtml(store.description)}</p>` : ""}
 
       <div class="detail-scores">
         <div class="detail-score">
@@ -1254,7 +1085,6 @@ function openDetails(id) {
           <strong>${fmtAverage(maintenance)} / 4</strong>
           <small>${escapeHtml(labelForScore(maintenance))} · ${storeReviews.length}${escapeHtml(tr("件", " reviews"))}</small>
         </div>
-
         <div class="detail-score">
           <span>${escapeHtml(tr("店舗総合平均", "Average Overall Rating"))}</span>
           <strong>${fmtAverage(overall)} / 4</strong>
@@ -1270,7 +1100,6 @@ function openDetails(id) {
       </p>
 
       <h3>${escapeHtml(tr("レビュー・コメント", "Reviews & Comments"))} (${storeReviews.length})</h3>
-
       <div class="detail-comments">
         ${storeReviews.length
           ? storeReviews.map(review => `
@@ -1278,21 +1107,11 @@ function openDetails(id) {
               <div class="review-badges">
                 <span class="review-badge">${escapeHtml(tr("整備：", "Maintenance: "))}${escapeHtml(labelForScore(Number(review.maintenance)))}</span>
                 <span class="review-badge">${escapeHtml(tr("店舗：", "Store: "))}${escapeHtml(labelForScore(Number(review.overall)))}</span>
-                ${review.driverRank
-                  ? `<span class="review-badge">${escapeHtml(tr("店内ランク ", "Local Skill "))}${review.driverRank}/5</span>`
-                  : ""}
-                ${review.connection
-                  ? `<span class="review-badge">${escapeHtml(tr("通信 ", "Connection "))}${review.connection}/5</span>`
-                  : ""}
+                ${review.driverRank ? `<span class="review-badge">${escapeHtml(tr("店内ランク ", "Local Skill "))}${review.driverRank}/5</span>` : ""}
+                ${review.connection ? `<span class="review-badge">${escapeHtml(tr("通信 ", "Connection "))}${review.connection}/5</span>` : ""}
               </div>
-
               <p>${escapeHtml(displayedComment(review))}</p>
-
-              <small>
-                ${escapeHtml(review.author || "メンバー")}
-                · ${escapeHtml(tr("訪問日 ", "Visited "))}${escapeHtml(dateLabel(review.visitedAt))}
-              </small>
-
+              <small>${escapeHtml(review.author || "メンバー")} · ${escapeHtml(tr("訪問日 ", "Visited "))}${escapeHtml(dateLabel(review.visitedAt))}</small>
               <div class="review-actions">${reviewActions(review)}</div>
             </article>
           `).join("")
@@ -1305,30 +1124,19 @@ function openDetails(id) {
   document.body.appendChild(dialog);
   dialog.showModal();
   dialog.addEventListener("close", () => dialog.remove());
-
   dialog.addEventListener("click", event => {
     if (event.target === dialog) dialog.close();
   });
 
   $("[data-review-this]", dialog)?.addEventListener("click", () => {
     dialog.close();
-
-    if ($("#reviewStoreSelect")) {
-      $("#reviewStoreSelect").value = id;
-    }
-
+    if ($("#reviewStoreSelect")) $("#reviewStoreSelect").value = id;
     $("#review")?.scrollIntoView({ behavior: "smooth" });
-
-    if (!currentUser) {
-      $("#authDialog")?.showModal();
-    }
+    if (!currentUser) $("#authDialog")?.showModal();
   });
 }
 
-/* --------------------------------------------------
-   ログイン・新規登録
-   -------------------------------------------------- */
-
+/* ログイン・新規登録 */
 function setAuthMode(mode) {
   authMode = mode;
 
@@ -1337,15 +1145,11 @@ function setAuthMode(mode) {
   });
 
   if ($("#authTitle")) {
-    $("#authTitle").textContent = mode === "login"
-      ? tr("ログイン", "Login")
-      : tr("新規登録", "Sign Up");
+    $("#authTitle").textContent = mode === "login" ? tr("ログイン", "Login") : tr("新規登録", "Sign Up");
   }
 
   if ($("#authSubmit")) {
-    $("#authSubmit").textContent = mode === "login"
-      ? tr("ログイン", "Login")
-      : tr("アカウントを作成", "Create Account");
+    $("#authSubmit").textContent = mode === "login" ? tr("ログイン", "Login") : tr("アカウントを作成", "Create Account");
   }
 
   $("#authForm input[name=password]")?.setAttribute(
@@ -1381,7 +1185,6 @@ async function handleAuth(event) {
       currentUser = result.data?.user || null;
       updateAuthButton();
 
-      // メール確認が必要な場合はログイン状態にならないことがある
       if (authMode === "signup" && !result.data?.session) {
         showToast(tr(
           "登録を受け付けました。メール確認が必要な場合は受信箱を確認してください。",
@@ -1393,57 +1196,38 @@ async function handleAuth(event) {
 
       $("#authDialog")?.close();
       renderAll();
-
-      showToast(authMode === "signup"
-        ? tr("登録しました。", "Registration successful.")
-        : tr("ログインしました。", "Logged in.")
-      );
+      showToast(authMode === "signup" ? tr("登録しました。", "Registration successful.") : tr("ログインしました。", "Logged in."));
     } catch (error) {
       console.error("認証処理エラー:", error);
       showToast(error.message || tr("認証に失敗しました。", "Authentication failed."));
     }
-
     return;
   }
 
-  // デモモードの簡易プロフィール。オンライン認証ではない
   if (authMode === "signup") {
     if (password.length < 8) {
       showToast(tr("パスワードは8文字以上にしてください。", "Password must be at least 8 characters."));
       return;
     }
 
-    currentUser = {
-      id: "local-" + uid(),
-      email
-    };
-
+    currentUser = { id: "local-" + uid(), email };
     localStorage.setItem(PROFILE_KEY, JSON.stringify(currentUser));
   } else {
     const profile = getCurrentProfile();
-
     if (!profile || profile.email !== email) {
       showToast(tr("デモモードでは先に新規登録してください。", "In demo mode, create a profile first."));
       return;
     }
-
     currentUser = profile;
   }
 
   updateAuthButton();
   $("#authDialog")?.close();
   renderAll();
-
-  showToast(authMode === "signup"
-    ? tr("デモプロフィールを作成しました。", "Demo profile created.")
-    : tr("ログインしました（デモ）。", "Logged in (demo).")
-  );
+  showToast(authMode === "signup" ? tr("デモプロフィールを作成しました。", "Demo profile created.") : tr("ログインしました（デモ）。", "Logged in (demo)."));
 }
 
-/* --------------------------------------------------
-   日本語・英語の切り替え
-   -------------------------------------------------- */
-
+/* 日本語・英語の切り替え */
 function applyLanguage() {
   document.documentElement.lang = currentLanguage;
 
@@ -1492,7 +1276,8 @@ function applyLanguage() {
     "レビューは体験ベースで": "Keep reviews experience-based",
     "レビューを投稿する": "Post a Review",
     "店舗を選択": "Select a store",
-    "コメント（日本語）": "Comment (Japanese)",
+    "コメント（日本語）": "Comment",
+    "コメント": "Comment",
     "最近のレビュー": "Recent Reviews",
     "編集": "Edit",
     "削除": "Delete",
@@ -1510,28 +1295,17 @@ function applyLanguage() {
     "店舗を登録しました。": "Store added."
   };
 
-  // HTMLに最初から書かれているテキストを翻訳
-  const walker = document.createTreeWalker(
-    document.body,
-    NodeFilter.SHOW_TEXT
-  );
-
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   const nodes = [];
 
-  while (walker.nextNode()) {
-    nodes.push(walker.currentNode);
-  }
+  while (walker.nextNode()) nodes.push(walker.currentNode);
 
   for (const node of nodes) {
-    if (!node.__jaOriginal) {
-      node.__jaOriginal = node.nodeValue;
-    }
-
+    if (!node.__jaOriginal) node.__jaOriginal = node.nodeValue;
     const original = node.__jaOriginal.trim();
     if (!original) continue;
 
     const translated = map[original];
-
     if (translated) {
       node.nodeValue = node.__jaOriginal.replace(
         original,
@@ -1551,8 +1325,8 @@ function applyLanguage() {
     "Google Mapsで検索できる住所": "Address searchable in Google Maps",
     "例：4": "e.g. 4",
     "営業時間、混雑しやすい時間など": "Opening hours, busy times, etc.",
-    "体験した内容を日本語で入力": "Describe your experience in Japanese",
-    "You may also write your review in English.": "You may also write your review in English."
+    "体験した内容を日本語で入力": "Write your experience in Japanese or English",
+    "You may also write your review in English.": "Write your review in Japanese or English"
   };
 
   document.querySelectorAll("input[placeholder], textarea[placeholder]").forEach(element => {
@@ -1561,29 +1335,21 @@ function applyLanguage() {
     }
 
     const original = element.dataset.originalPlaceholder;
-
     element.placeholder = currentLanguage === "en"
       ? (placeholderMap[original] || original)
       : original;
   });
 
   const languageButton = $("#languageToggle");
-
   if (languageButton) {
-    languageButton.textContent = currentLanguage === "ja"
-      ? "English"
-      : "日本語";
+    languageButton.textContent = currentLanguage === "ja" ? "English" : "日本語";
   }
 
   updateAuthButton();
   renderAll();
 }
 
-/* --------------------------------------------------
-   イベント登録
-   -------------------------------------------------- */
-
-// 国・地域入力候補
+/* イベント登録 */
 $("#storeCountry")?.addEventListener("input", populateRegions);
 
 $("#countryFilter")?.addEventListener("input", () => {
@@ -1593,19 +1359,15 @@ $("#countryFilter")?.addEventListener("input", () => {
 
 $("#regionFilter")?.addEventListener("input", renderStores);
 $("#regionFilter")?.addEventListener("change", renderStores);
-
-// 店舗検索・並び替え
 $("#searchInput")?.addEventListener("input", renderStores);
 $("#sortFilter")?.addEventListener("change", renderStores);
 
-// 店舗登録
+/* 店舗登録 */
 $("#storeForm")?.addEventListener("submit", async event => {
   event.preventDefault();
-
   if (!requireUser()) return;
 
   const formData = new FormData(event.currentTarget);
-
   const country = String(formData.get("country") || "").trim();
   const region = String(formData.get("region") || "").trim();
   const name = String(formData.get("name") || "").trim();
@@ -1627,17 +1389,14 @@ $("#storeForm")?.addEventListener("submit", async event => {
     region,
     address,
     mapsUrl: String(formData.get("mapsUrl") || "").trim(),
-    cabinetCount: formData.get("cabinetCount")
-      ? Number(formData.get("cabinetCount"))
-      : null,
+    cabinetCount: formData.get("cabinetCount") ? Number(formData.get("cabinetCount")) : null,
     description: String(formData.get("description") || "").trim()
   });
 });
 
-// レビュー投稿
+/* レビュー投稿：コメント欄は1つ。commentEnは参照しない */
 $("#reviewForm")?.addEventListener("submit", async event => {
   event.preventDefault();
-
   if (!requireUser()) return;
 
   const formData = new FormData(event.currentTarget);
@@ -1656,24 +1415,18 @@ $("#reviewForm")?.addEventListener("submit", async event => {
     storeId: String(formData.get("storeId")),
     maintenance: Number(formData.get("maintenance")),
     overall: Number(formData.get("overall")),
-    driverRank: formData.get("driverRank")
-      ? Number(formData.get("driverRank"))
-      : null,
-    connection: formData.get("connection")
-      ? Number(formData.get("connection"))
-      : null,
+    driverRank: formData.get("driverRank") ? Number(formData.get("driverRank")) : null,
+    connection: formData.get("connection") ? Number(formData.get("connection")) : null,
     comment: String(formData.get("comment") || "").trim(),
-    commentEn: String(formData.get("commentEn") || "").trim(),
     visitedAt: String(formData.get("visitedAt") || "")
   });
 });
 
-// ログイン・ログアウト
+/* ログイン・ログアウト */
 $("#authButton")?.addEventListener("click", async () => {
   if (currentUser) {
     if (supabase) {
       const { error } = await supabase.auth.signOut();
-
       if (error) {
         showToast(error.message);
         return;
@@ -1697,13 +1450,13 @@ $$(".auth-tabs button").forEach(button => {
   button.addEventListener("click", () => setAuthMode(button.dataset.mode));
 });
 
-// 店舗詳細ボタン
+/* 店舗詳細ボタン */
 $("#storeGrid")?.addEventListener("click", event => {
   const button = event.target.closest("[data-details]");
   if (button) openDetails(button.dataset.details);
 });
 
-// レビュー操作
+/* レビュー操作 */
 document.addEventListener("click", event => {
   const editButton = event.target.closest("[data-edit-review]");
   if (editButton) {
@@ -1718,33 +1471,34 @@ document.addEventListener("click", event => {
   }
 
   const reportButton = event.target.closest("[data-report-review]");
-  if (reportButton) {
-    reportReview(reportButton.dataset.reportReview);
-  }
+  if (reportButton) reportReview(reportButton.dataset.reportReview);
 });
 
-// トップへ戻る
+/* トップへ戻る */
 $("#homeLink")?.addEventListener("click", event => {
   event.preventDefault();
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
-// 言語切り替え
+/* 言語切り替え */
 $("#languageToggle")?.addEventListener("click", () => {
   currentLanguage = currentLanguage === "ja" ? "en" : "ja";
   localStorage.setItem("inidac-language", currentLanguage);
   applyLanguage();
 });
 
-// 初期化
+/* 初期化 */
 if ($("#visitedAt")) {
   $("#visitedAt").value = new Date().toISOString().slice(0, 10);
 }
 
+removeSeparateEnglishCommentField();
 populateCountries();
 setAuthMode("login");
 
 loadData().then(() => {
+  removeSeparateEnglishCommentField();
   applyLanguage();
 });
-})();　
+
+})();
