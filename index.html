@@ -18,6 +18,9 @@
     <nav>
       <a href="#stores">店舗を探す</a>
       <a href="#add-store">店舗を追加</a>
+      <button class="button button-outline" id="languageToggle" type="button" aria-label="Switch language">English</button>
+      <button class="button button-outline" id="siteEditToggle" type="button">編集モード</button>
+      <button class="button button-outline" id="siteEditSave" type="button" hidden>編集を保存</button>
       <button class="button button-outline" id="authButton">ログイン / 登録</button>
     </nav>
   </header>
@@ -56,8 +59,8 @@
       </div>
       <div class="filters panel">
         <label class="search-field"><span>⌕</span><input id="searchInput" type="search" placeholder="店舗名・住所で検索"></label>
-        <label><span class="field-label">国</span><input id="countryFilter" type="search" placeholder="国で絞り込み"></label>
-        <label><span class="field-label">都道府県・地域</span><input id="regionFilter" type="search" placeholder="地域で絞り込み"></label>
+        <label><span class="field-label">国</span><input id="countryFilter" type="search" placeholder="国名で絞り込み"></label>
+        <label><span class="field-label">都道府県・地域</span><input id="regionFilter" type="search" placeholder="日本国内のみ入力"></label>
         <label><span class="field-label">並び順</span><select id="sortFilter"><option value="reviews">レビューが多い順</option><option value="maintenance">メンテナンス評価順</option><option value="overall">店舗総合評価順</option><option value="name">店舗名順</option></select></label>
       </div>
       <div class="store-grid" id="storeGrid"></div>
@@ -73,8 +76,8 @@
           <div class="form-title"><span class="step-number">＋</span><div><h3>店舗情報</h3><p>場所と基本情報を登録</p></div></div>
           <label>店舗名 <span class="required">必須</span><input name="name" required maxlength="100" placeholder="例：○○ゲームセンター"></label>
           <div class="form-row">
-            <label>国 <span class="required">必須</span><input name="country" id="storeCountry" required maxlength="80" placeholder="例：日本 / Malaysia"></label>
-            <label id="regionFieldLabel">都道府県・州・地域 <span class="required">日本国内のみ必須</span><input name="region" id="storeRegion" maxlength="80" placeholder="日本の場合：千葉県"></label>
+            <label>国名 <span class="required">必須</span><input name="country" id="storeCountry" required maxlength="80" placeholder="例：日本 / Malaysia"></label>
+            <label id="regionFieldLabel">都道府県 <span class="optional">日本国内のみ必須</span><input name="region" id="storeRegion" maxlength="80" placeholder="日本の場合：千葉県"></label>
           </div>
           <label>住所 <span class="required">必須</span><input name="address" required maxlength="240" placeholder="Google Mapsで検索できる住所"></label>
           <label>Google Maps URL <span class="optional">任意</span><input name="mapsUrl" type="url" placeholder="https://maps.google.com/..."></label>
@@ -123,7 +126,8 @@
           <div class="rating-block"><label for="driverRank">店内ランク <span class="optional">サブ評価・5段階</span></label><p class="muted small">店内ドライバーの腕前の高さ</p><select name="driverRank" id="driverRank"><option value="">未評価</option><option value="1">1 — 初心者が多い印象</option><option value="2">2 — やや初級寄り</option><option value="3">3 — さまざまな実力</option><option value="4">4 — 上級者が多い印象</option><option value="5">5 — 非常にレベルが高い印象</option></select></div>
           <div class="rating-block"><label for="connection">通信状況 <span class="optional">海外店舗向け・5段階</span></label><p class="muted small">オンライン対戦の通信品質</p><select name="connection" id="connection"><option value="">未評価</option><option value="1">1 — 不安定</option><option value="2">2 — やや不安定</option><option value="3">3 — 普通</option><option value="4">4 — 良好</option><option value="5">5 — とても良好</option></select></div>
         </div>
-        <label>コメント <span class="required">必須</span><textarea name="comment" rows="5" required minlength="5" maxlength="1500" placeholder="どの部分が良かったか、気になった点などを具体的に書いてください（5〜1500文字）"></textarea></label>
+        <label>コメント（日本語） <span class="required">必須</span><textarea name="comment" rows="4" required minlength="5" maxlength="1500" placeholder="体験した内容を日本語で入力"></textarea></label>
+        <label>Comment (English) <span class="optional">Optional / 任意</span><textarea name="commentEn" rows="4" maxlength="1500" placeholder="You may also write your review in English."></textarea></label>
         <label>訪問日 <span class="optional">任意</span><input type="date" name="visitedAt" id="visitedAt"></label>
         <label class="check-label"><input type="checkbox" name="honest" required><span>実際の体験に基づくレビューであり、個人情報や誹謗中傷を含めていません。</span></label>
         <button class="button button-primary" type="submit">レビューを投稿する</button>
@@ -159,5 +163,48 @@
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
+  <script>
+  // Admin-only visual editor: text, color, background, font size, and section ordering.
+  (() => {
+    const KEY = 'inidac-review-page-edits-v2';
+    const OLD_KEY = 'inidac-review-page-edits-v1';
+    const toggle = document.getElementById('siteEditToggle');
+    const save = document.getElementById('siteEditSave');
+    const ADMIN_EMAIL = 'grgt1462@gmail.com';
+    let editing = false, selected = null, cloudLoaded = false;
+    const selector = 'h1,h2,h3,h4,p,small,span,label,li,.eyebrow,.muted,.field-label,.hero-badge,.hero-card';
+    function isAdmin() { return !!(window.__inidacIsAdmin && window.__inidacIsAdmin(ADMIN_EMAIL)); }
+    function targets() { return [...document.querySelectorAll(selector)].filter(el => !el.closest('button,a,form,nav,dialog,#visualEditorPanel') && el.children.length < 4); }
+    function pack() { return targets().map((el,i)=>({i,html:el.innerHTML,style:{color:el.style.color||'',backgroundColor:el.style.backgroundColor||'',fontSize:el.style.fontSize||'',marginTop:el.style.marginTop||'',marginBottom:el.style.marginBottom||'',textAlign:el.style.textAlign||'',width:el.style.width||''}})); }
+    function applySaved(saved) {
+      if (Array.isArray(saved)) { targets().forEach((el,i)=>{ if(typeof saved[i]==='string')el.innerHTML=saved[i]; }); return; }
+      if (!saved || !Array.isArray(saved.items)) return;
+      targets().forEach((el,i)=>{ const item=saved.items.find(x=>x.i===i); if(!item)return; if(typeof item.html==='string')el.innerHTML=item.html; Object.assign(el.style,item.style||{}); });
+    }
+    function panel() {
+      if(document.getElementById('visualEditorPanel')) return;
+      const p=document.createElement('aside'); p.id='visualEditorPanel'; p.innerHTML='<strong>サイトデザイン編集</strong><label>文字色 <input id="veColor" type="color" value="#f8fafc"></label><label>背景色 <input id="veBg" type="color" value="#10151f"></label><label>文字サイズ <select id="veSize"><option value="">変更なし</option><option>12px</option><option>14px</option><option>16px</option><option>18px</option><option>22px</option><option>28px</option><option>36px</option><option>48px</option></select></label><label>配置 <select id="veAlign"><option value="">変更なし</option><option value="left">左</option><option value="center">中央</option><option value="right">右</option></select></label><div class="ve-row"><button type="button" id="veUp">↑ 上へ</button><button type="button" id="veDown">↓ 下へ</button></div><p>編集モード中に文章をクリックして選択し、スタイルを変更できます。上下移動は同じ親要素内で行います。</p>';
+      document.body.appendChild(p);
+      const get=id=>document.getElementById(id);
+      get('veColor').addEventListener('input',e=>{if(selected)selected.style.color=e.target.value;});
+      get('veBg').addEventListener('input',e=>{if(selected)selected.style.backgroundColor=e.target.value;});
+      get('veSize').addEventListener('change',e=>{if(selected)selected.style.fontSize=e.target.value;});
+      get('veAlign').addEventListener('change',e=>{if(selected)selected.style.textAlign=e.target.value;});
+      get('veUp').addEventListener('click',()=>{if(selected&&selected.previousElementSibling)selected.parentNode.insertBefore(selected,selected.previousElementSibling);});
+      get('veDown').addEventListener('click',()=>{if(selected&&selected.nextElementSibling)selected.parentNode.insertBefore(selected.nextElementSibling,selected);});
+    }
+    function refreshAccess(){const allowed=isAdmin();toggle.hidden=!allowed;if(!allowed&&editing)stopEditing();}
+    function startEditing(){if(!isAdmin()){alert('管理者アカウントでログインしてください。');return;}editing=true;panel();document.getElementById('visualEditorPanel').style.display='block';targets().forEach(el=>{el.classList.add('visual-editing');el.contentEditable='true';el.addEventListener('click',selectTarget);});toggle.textContent='編集モード終了';save.hidden=false;}
+    function selectTarget(e){if(!editing)return; e.stopPropagation(); if(selected)selected.classList.remove('visual-selected');selected=e.currentTarget;selected.classList.add('visual-selected');document.getElementById('veColor').value=toHex(getComputedStyle(selected).color)||'#f8fafc';document.getElementById('veBg').value=toHex(getComputedStyle(selected).backgroundColor)||'#10151f';document.getElementById('veSize').value=selected.style.fontSize||'';document.getElementById('veAlign').value=selected.style.textAlign||'';}
+    function toHex(rgb){const m=String(rgb).match(/\d+/g);if(!m||m.length<3)return '';return '#'+m.slice(0,3).map(n=>Number(n).toString(16).padStart(2,'0')).join('');}
+    function stopEditing(){editing=false;targets().forEach(el=>{el.contentEditable='false';el.classList.remove('visual-editing','visual-selected');});selected=null;const p=document.getElementById('visualEditorPanel');if(p)p.style.display='none';toggle.textContent='編集モード';save.hidden=true;}
+    function loadLocal(){try{const v=JSON.parse(localStorage.getItem(KEY)||'null');if(v)applySaved(v);else{const old=JSON.parse(localStorage.getItem(OLD_KEY)||'null');if(old)applySaved(old);}}catch(_){}}
+    async function loadCloud(){const db=window.__inidacSupabase;if(!db||cloudLoaded)return;const {data,error}=await db.from('site_content').select('content').eq('id',1).maybeSingle();if(!error&&data?.content){applySaved(data.content);cloudLoaded=true;}}
+    toggle.addEventListener('click',()=>editing?stopEditing():startEditing());
+    save.addEventListener('click',async()=>{if(!isAdmin()){alert('管理者のみ保存できます。');return;}const data={version:2,items:pack()};localStorage.setItem(KEY,JSON.stringify(data));const db=window.__inidacSupabase;if(db){const {error}=await db.from('site_content').upsert({id:1,content:data,updated_by:window.__inidacCurrentUser.id,updated_at:new Date().toISOString()});if(error)alert('このブラウザには保存しましたが、公開サイトへの保存に失敗しました：'+error.message);else alert('編集内容を公開サイトに保存しました。');}else alert('このブラウザに保存しました。公開サイトへの保存には管理者ログインが必要です。');stopEditing();});
+    const style=document.createElement('style');style.textContent='.visual-editing{outline:1px dashed #f59e0b!important;outline-offset:3px;cursor:text}.visual-selected{outline:2px solid #22c55e!important}#visualEditorPanel{display:none;position:fixed;z-index:9999;right:12px;bottom:12px;width:min(320px,calc(100vw - 24px));max-height:70vh;overflow:auto;background:#111827;color:#f9fafb;border:1px solid #64748b;border-radius:12px;padding:14px;box-shadow:0 12px 35px #0008;font:14px system-ui}#visualEditorPanel label{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:9px 0}#visualEditorPanel input,#visualEditorPanel select{max-width:145px}#visualEditorPanel .ve-row{display:flex;gap:8px}#visualEditorPanel button{padding:6px 10px}#visualEditorPanel p{font-size:12px;color:#cbd5e1}';document.head.appendChild(style);
+    window.addEventListener('inidac-auth-updated',()=>{refreshAccess();loadCloud();});loadLocal();setTimeout(loadCloud,1200);refreshAccess();setInterval(refreshAccess,1500);
+  })();
+  </script>
 </body>
 </html>
