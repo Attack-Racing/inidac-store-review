@@ -771,6 +771,128 @@ async function addStore(data) {
   showToast(tr("店舗を登録しました。", "Store added."));
 }
 
+   
+/* 店舗編集：管理者専用 */
+async function editStore(id) {
+  if (!isAdmin()) {
+    showToast(tr("管理者のみ編集できます。", "Only administrators can edit stores."));
+    return;
+  }
+
+  const store = stores.find(item => item.id === id);
+  if (!store) return;
+
+  const dialog = document.createElement("dialog");
+  dialog.className = "modal";
+
+  dialog.innerHTML = `
+    <form method="dialog" class="modal-close-row">
+      <button class="icon-button" aria-label="閉じる">×</button>
+    </form>
+    <div class="modal-content">
+      <h2>${escapeHtml(tr("店舗情報を編集", "Edit Store"))}</h2>
+      <form id="editStoreForm" class="form-panel">
+        <label>${escapeHtml(tr("店舗名", "Store name"))}
+          <input name="name" required maxlength="100" value="${escapeHtml(store.name)}">
+        </label>
+        <label>${escapeHtml(tr("国名", "Country"))}
+          <input name="country" id="editStoreCountry" required maxlength="80" value="${escapeHtml(store.country)}">
+        </label>
+        <label>${escapeHtml(tr("都道府県・地域", "Region"))}
+          <input name="region" maxlength="80" value="${escapeHtml(store.region || "")}">
+        </label>
+        <label>${escapeHtml(tr("住所", "Address"))}
+          <input name="address" required maxlength="240" value="${escapeHtml(store.address || "")}">
+        </label>
+        <label>Google Maps URL
+          <input name="mapsUrl" type="url" value="${escapeHtml(store.mapsUrl || "")}">
+        </label>
+        <label>${escapeHtml(tr("設置台数", "Cabinet count"))}
+          <input name="cabinetCount" type="number" min="1" max="100" value="${store.cabinetCount || ""}">
+        </label>
+        <label>${escapeHtml(tr("店舗メモ", "Store notes"))}
+          <textarea name="description" rows="3" maxlength="500">${escapeHtml(store.description || "")}</textarea>
+        </label>
+        <button class="button button-primary button-full" type="submit">
+          ${escapeHtml(tr("変更を保存", "Save Changes"))}
+        </button>
+      </form>
+    </div>
+  `;
+
+  document.body.appendChild(dialog);
+  dialog.showModal();
+  dialog.addEventListener("close", () => dialog.remove());
+
+  $("#editStoreForm", dialog).addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (!isAdmin()) {
+      showToast(tr("管理者のみ編集できます。", "Only administrators can edit stores."));
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    const patch = {
+      name: String(formData.get("name") || "").trim(),
+      country: String(formData.get("country") || "").trim(),
+      region: String(formData.get("region") || "").trim(),
+      address: String(formData.get("address") || "").trim(),
+      mapsUrl: String(formData.get("mapsUrl") || "").trim(),
+      cabinetCount: formData.get("cabinetCount")
+        ? Number(formData.get("cabinetCount"))
+        : null,
+      description: String(formData.get("description") || "").trim()
+    };
+
+    if (!patch.name || !patch.country || !patch.address) {
+      showToast(tr("店舗名・国・住所は必須です。", "Name, country and address are required."));
+      return;
+    }
+
+    if (patch.country === "日本" && !patch.region) {
+      showToast(tr("日本国内の店舗は都道府県が必要です。", "A prefecture is required for stores in Japan."));
+      return;
+    }
+
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("stores")
+        .update({
+          name: patch.name,
+          country: patch.country,
+          region: patch.region,
+          address: patch.address,
+          maps_url: patch.mapsUrl || null,
+          cabinet_count: patch.cabinetCount,
+          description: patch.description || null
+        })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error || !data) {
+        console.error("店舗更新エラー:", error);
+        showToast(tr(
+          "更新できませんでした。Supabaseの更新権限を確認してください。",
+          "Could not update store. Check Supabase update permissions."
+        ) + (error ? " " + error.message : ""));
+        return;
+      }
+
+      Object.assign(store, fromDbStore(data));
+    } else {
+      Object.assign(store, patch);
+      saveLocal();
+    }
+
+    dialog.close();
+    renderAll();
+    showToast(tr("店舗情報を更新しました。", "Store updated."));
+  });
+}
+
+   
 /* レビュー投稿：comment列だけに保存 */
 async function addReview(data) {
   if (!requireUser()) return;
