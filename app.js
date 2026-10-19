@@ -12,6 +12,29 @@
   const STORAGE_KEY = "inidac-review-data-v1";
   const PROFILE_KEY = "inidac-review-profile-v1";
 
+  // 元の国・地域選択肢を復元。名称は指定どおり維持しています。
+  const LOCATIONS = [
+    { name: "日本", regions: [
+      "北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県", "茨城県", "栃木県", "群馬県",
+      "埼玉県", "千葉県", "東京都", "神奈川県", "新潟県", "富山県", "石川県", "福井県", "山梨県", "長野県",
+      "岐阜県", "静岡県", "愛知県", "三重県", "滋賀県", "京都府", "大阪府", "兵庫県", "奈良県", "和歌山県",
+      "鳥取県", "島根県", "岡山県", "広島県", "山口県", "徳島県", "香川県", "愛媛県", "高知県", "福岡県",
+      "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"
+    ] },
+    { name: "Malaysia", regions: ["Malaysia"] },
+    { name: "台湾", regions: ["Taiwan"] },
+    { name: "香港", regions: ["Hongkong"] },
+    { name: "Indonesia", regions: ["Indonesia"] },
+    { name: "Myanmar", regions: ["Myanmar"] },
+    { name: "シンガポール", regions: ["Singapore"] },
+    { name: "Thailand", regions: ["Thailand"] },
+    { name: "Vietnam", regions: ["Vietnam"] },
+    { name: "Cambodia", regions: ["Cambodia"] },
+    { name: "Macau", regions: ["Macau"] },
+    { name: "Austrailia", regions: ["Austrailia"] },
+    { name: "その他", regions: ["その他"] }
+  ];
+
   let supabase = null;
   let currentUser = null;
   let authMode = "login";
@@ -209,7 +232,7 @@
         <h2>店舗情報を編集</h2>
         <form id="editStoreForm" class="form-panel">
           <label>店舗名 *<input name="name" required maxlength="160" value="${escapeHtml(store.name || "")}"></label>
-          <label>国 *<input name="country" required maxlength="100" value="${escapeHtml(store.country || "")}"></label>
+          <label>国 *<select name="country" required>${LOCATIONS.map(location => `<option value="${escapeHtml(location.name)}" ${location.name === store.country ? "selected" : ""}>${escapeHtml(location.name)}</option>`).join("")}</select></label>
           <label>都道府県・州・地域<input name="region" maxlength="100" value="${escapeHtml(store.region || "")}"></label>
           <label>住所 *<input name="address" required maxlength="300" value="${escapeHtml(store.address || "")}"></label>
           <label>Google Maps URL<input name="mapsUrl" type="url" value="${escapeHtml(store.mapsUrl || "")}"></label>
@@ -352,6 +375,30 @@
     }
     updateAuthButton(); renderAll(); $("#authDialog").close(); showToast(authMode === "signup" ? "デモプロフィールを作成しました。" : "ログインしました（デモ）。");
   }
+  function initLocationOptions() {
+    const countrySelect = $("#storeCountry");
+    const countryFilter = $("#countryFilter");
+    const regionFilter = $("#regionFilter");
+    const currentCountry = countrySelect.value;
+    const currentFilterCountry = countryFilter.value;
+    const currentRegion = regionFilter.value;
+
+    countrySelect.innerHTML = '<option value="">国を選択</option>' + LOCATIONS.map(location =>
+      `<option value="${escapeHtml(location.name)}">${escapeHtml(location.name)}</option>`
+    ).join("");
+    countryFilter.innerHTML = '<option value="">すべての国</option>' + LOCATIONS.map(location =>
+      `<option value="${escapeHtml(location.name)}">${escapeHtml(location.name)}</option>`
+    ).join("");
+    const allRegions = [...new Set(LOCATIONS.flatMap(location => location.regions))];
+    regionFilter.innerHTML = '<option value="">すべての地域</option>' + allRegions.map(region =>
+      `<option value="${escapeHtml(region)}">${escapeHtml(region)}</option>`
+    ).join("");
+
+    if (LOCATIONS.some(location => location.name === currentCountry)) countrySelect.value = currentCountry;
+    if (LOCATIONS.some(location => location.name === currentFilterCountry)) countryFilter.value = currentFilterCountry;
+    if (allRegions.includes(currentRegion)) regionFilter.value = currentRegion;
+  }
+
   function updateRegionRequirement() {
     const countryInput = $("#storeCountry"), regionInput = $("#storeRegion");
     const isJapan = ["日本", "japan"].includes(countryInput.value.trim().toLowerCase());
@@ -414,6 +461,7 @@
   document.addEventListener("DOMContentLoaded", async () => {
     try {
       bindEvents();
+      initLocationOptions();
       $("#visitedAt").value = new Date().toISOString().slice(0, 10);
       updateRegionRequirement();
       await loadData();
