@@ -892,6 +892,59 @@ async function editStore(id) {
   });
 }
 
+/* 店舗削除：管理者専用 */
+async function deleteStore(id) {
+  if (!isAdmin()) {
+    showToast(tr("管理者のみ削除できます。", "Only administrators can delete stores."));
+    return;
+  }
+
+  const store = stores.find(item => item.id === id);
+  if (!store) return;
+
+  const linkedReviews = getStoreReviews(id);
+
+  const message = tr(
+    `「${store.name}」を削除しますか？\nこの店舗のレビュー ${linkedReviews.length} 件も削除対象になります。この操作は取り消せません。`,
+    `Delete "${store.name}"?\nIts ${linkedReviews.length} linked review(s) will also be deleted. This cannot be undone.`
+  );
+
+  if (!confirm(message)) return;
+
+  if (supabase) {
+    // 先にレビューを削除。両テーブルの削除権限が必要です。
+    const { error: reviewError } = await supabase
+      .from("reviews")
+      .delete()
+      .eq("store_id", id);
+
+    if (reviewError) {
+      console.error("関連レビュー削除エラー:", reviewError);
+      showToast("レビューを削除できませんでした：" + reviewError.message);
+      return;
+    }
+
+    const { error: storeError } = await supabase
+      .from("stores")
+      .delete()
+      .eq("id", id);
+
+    if (storeError) {
+      console.error("店舗削除エラー:", storeError);
+      showToast("店舗を削除できませんでした：" + storeError.message);
+      return;
+    }
+  }
+
+  stores = stores.filter(item => item.id !== id);
+  reviews = reviews.filter(item => item.storeId !== id);
+
+  if (!supabase) saveLocal();
+
+  renderAll();
+  showToast(tr("店舗を削除しました。", "Store deleted."));
+}
+
    
 /* レビュー投稿：comment列だけに保存 */
 async function addReview(data) {
