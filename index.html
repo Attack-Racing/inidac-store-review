@@ -173,7 +173,7 @@
     const save = document.getElementById('siteEditSave');
     const ADMIN_EMAIL = 'grgt1462@gmail.com';
     let editing = false, selected = null, cloudLoaded = false;
-    const selector = 'h1,h2,h3,h4,p,small,span,label,li,.eyebrow,.muted,.field-label,.hero-badge,.hero-card';
+    const selector = 'h1,h2,h3,h4,p,small,li,.eyebrow,.muted,.hero-badge';
     function isAdmin() { return !!(window.__inidacIsAdmin && window.__inidacIsAdmin(ADMIN_EMAIL)); }
 function targets() {
   return [...document.querySelectorAll(selector)].filter(el =>
