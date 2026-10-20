@@ -267,12 +267,14 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-    
-
-.visual-selected {
-  outline: 2px solid #22c55e !important;
-}.visual-selected{outline:2px solid #22c55e!important}#visualEditorPanel{display:none;position:fixed;z-index:9999;right:12px;bottom:12px;width:min(320px,calc(100vw - 24px));max-height:70vh;overflow:auto;background:#111827;color:#f9fafb;border:1px solid #64748b;border-radius:12px;padding:14px;box-shadow:0 12px 35px #0008;font:14px system-ui}#visualEditorPanel label{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:9px 0}#visualEditorPanel input,#visualEditorPanel select{max-width:145px}#visualEditorPanel .ve-row{display:flex;gap:8px}#visualEditorPanel button{padding:6px 10px}#visualEditorPanel p{font-size:12px;color:#cbd5e1}';document.head.appendChild(style);
-    window.addEventListener('inidac-auth-updated',()=>{refreshAccess();loadCloud();});loadLocal();setTimeout(loadCloud,1200);refreshAccess();setInterval(refreshAccess,1500);
+window.addEventListener('inidac-auth-updated', () => {
+  refreshAccess();
+  loadCloud();
+});
+loadLocal();
+setTimeout(loadCloud, 1200);
+refreshAccess();
+setInterval(refreshAccess, 1500);
   })();
   </script>
 </body>
