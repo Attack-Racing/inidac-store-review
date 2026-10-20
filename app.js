@@ -409,6 +409,25 @@
   }
 
   function bindEvents() {
+        // 日本語・英語の切り替え
+    const languageToggle = $("#languageToggle");
+
+    if (languageToggle) {
+      languageToggle.addEventListener("click", () => {
+        const nextLanguage =
+          document.documentElement.lang === "en" ? "ja" : "en";
+
+        document.documentElement.lang = nextLanguage;
+        languageToggle.textContent =
+          nextLanguage === "en" ? "日本語" : "English";
+
+        showToast(
+          nextLanguage === "en"
+            ? "English mode selected."
+            : "日本語モードに切り替えました。"
+        );
+      });
+    }
     $("#authButton").addEventListener("click", async () => {
       try {
         if (currentUser) {
