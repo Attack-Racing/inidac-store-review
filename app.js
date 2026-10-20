@@ -409,7 +409,8 @@
   }
 
   function bindEvents() {
-        // 日本語・英語の切り替え
+
+    // 日本語・英語の切り替え
     const languageToggle = $("#languageToggle");
 
     if (languageToggle) {
@@ -421,6 +422,11 @@
         languageToggle.textContent =
           nextLanguage === "en" ? "日本語" : "English";
 
+        // ページ内の翻訳処理を呼び出す
+        if (typeof window.setSiteLanguage === "function") {
+          window.setSiteLanguage(nextLanguage);
+        }
+
         showToast(
           nextLanguage === "en"
             ? "English mode selected."
@@ -428,6 +434,7 @@
         );
       });
     }
+
     $("#authButton").addEventListener("click", async () => {
       try {
         if (currentUser) {
