@@ -208,10 +208,15 @@ function targets() {
     async function loadCloud(){const db=window.__inidacSupabase;if(!db||cloudLoaded)return;const {data,error}=await db.from('site_content').select('content').eq('id',1).maybeSingle();if(!error&&data?.content){applySaved(data.content);cloudLoaded=true;}}
     toggle.addEventListener('click',()=>editing?stopEditing():startEditing());
     save.addEventListener('click',async()=>{if(!isAdmin()){alert('管理者のみ保存できます。');return;}const data={version:2,items:pack()};localStorage.setItem(KEY,JSON.stringify(data));const db=window.__inidacSupabase;if(db){const {error}=await db.from('site_content').upsert({id:1,content:data,updated_by:window.__inidacCurrentUser.id,updated_at:new Date().toISOString()});if(error)alert('このブラウザには保存しましたが、公開サイトへの保存に失敗しました：'+error.message);else alert('編集内容を公開サイトに保存しました。');}else alert('このブラウザに保存しました。公開サイトへの保存には管理者ログインが必要です。');stopEditing();});
-    const style=document.createElement('style');style.textContent='.visual-editing {
-  outline: none !important;
-  cursor: text;
-}
+    const style = document.createElement('style');
+style.textContent = `
+  .visual-editing {
+    outline: none !important;
+    cursor: text;
+  }
+`;
+document.head.appendChild(style);
+    
 
 .visual-selected {
   outline: 2px solid #22c55e !important;
