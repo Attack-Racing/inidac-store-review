@@ -269,10 +269,8 @@ document.head.appendChild(style);
 
 window.addEventListener('inidac-auth-updated', () => {
   refreshAccess();
-  loadCloud();
 });
-loadLocal();
-setTimeout(loadCloud, 1200);
+
 refreshAccess();
 setInterval(refreshAccess, 1500);
   })();
