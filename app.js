@@ -407,7 +407,290 @@
     regionInput.placeholder = isJapan ? "日本の場合：千葉県" : "海外店舗は入力不要";
     $("#regionFieldLabel").classList.toggle("muted", !isJapan);
   }
+  // 日本語・英語のUI翻訳辞書
+  // 店舗名・住所・ユーザーのレビューコメントは翻訳しません。
+  const UI_TRANSLATIONS = {
+    "イニDAC 店舗レビュー": "Initial D Arcade Store Reviews",
+    "店舗を探す": "Find an Arcade",
+    "店舗検索": "Search Stores",
+    "店舗名・住所で検索": "Search by store name or address",
+    "すべての国": "All countries",
+    "すべての地域": "All regions",
+    "並び替え": "Sort by",
+    "レビュー数順": "Most reviews",
+    "店舗名順": "Store name",
+    "メンテナンス評価順": "Maintenance rating",
+    "総合評価順": "Overall rating",
+    "店舗一覧": "Arcade Listings",
+    "店舗を登録": "Add a Store",
+    "レビューを投稿": "Post a Review",
+    "最近のレビュー": "Recent Reviews",
+    "店舗名": "Store Name",
+    "国": "Country",
+    "都道府県・州・地域": "Prefecture / State / Region",
+    "住所": "Address",
+    "Google Maps URL": "Google Maps URL",
+    "設置台数": "Number of Cabinets",
+    "店舗メモ": "Store Notes",
+    "変更を保存": "Save Changes",
+    "店舗を選択": "Select a store",
+    "国を選択": "Select a country",
+    "詳細・コメント": "Details & Comments",
+    "Google Mapsで開く ↗": "Open in Google Maps ↗",
+    "Google Maps ↗": "Google Maps ↗",
+    "メンテナンス": "Maintenance",
+    "店舗総合評価": "Overall Store Rating",
+    "メンテナンス平均": "Average Maintenance Rating",
+    "店舗総合平均": "Average Overall Rating",
+    "未評価": "Not rated",
+    "良い": "Good",
+    "普通": "Average",
+    "少し悪い": "Below average",
+    "悪い": "Poor",
+    "訪問日未登録": "Visit date not provided",
+    "レビュー・コメント": "Reviews & Comments",
+    "まだレビューはありません。": "No reviews yet.",
+    "まだレビューはありません。最初のレビューを投稿してください。": "No reviews yet. Be the first to post a review.",
+    "ログイン / 登録": "Log In / Sign Up",
+    "ログイン": "Log In",
+    "新規登録": "Sign Up",
+    "アカウントを作成": "Create Account",
+    "ログイン中": "Logged in",
+    "閉じる ×": "Close ×",
+    "この店舗をレビュー": "Review this store",
+    "店舗を編集": "Edit Store",
+    "店舗を削除": "Delete Store",
+    "問題を報告": "Report an Issue",
+    "編集": "Edit",
+    "削除": "Delete",
+    "運営削除": "Admin Delete",
+    "投稿者：": "Posted by: ",
+    "整備：": "Maintenance: ",
+    "店舗：": "Store: ",
+    "店内ランク ": "In-store rank ",
+    "通信 ": "Connection ",
+    "台数未登録": "Cabinet count not provided",
+    "レビュー ": "Reviews ",
+    "設置 ": "Cabinets: ",
+    "件": "reviews",
+    "日本語": "Japanese",
+    "日本語モードに切り替えました。": "Switched to Japanese mode.",
+    "投稿するにはログイン / 登録してください。": "Please log in or sign up to post.",
+    "データを読み込めません。Supabaseのテーブル・権限設定を確認してください。": "Could not load data. Check your Supabase tables and permissions.",
+    "オンラインモード：登録ユーザーは店舗を追加できます。": "Online mode: registered users can add stores.",
+    "オンラインモード：ログインしてレビューを投稿できます。": "Online mode: log in to post reviews.",
+    "Supabase Authでメールアドレスとパスワードを管理します。": "Email addresses and passwords are managed by Supabase Auth.",
+    "デモモード：データはこのブラウザ内だけに保存されます。他の人には共有されません。": "Demo mode: data is saved only in this browser and is not shared with others.",
+    "デモモード：レビューはこのブラウザ内だけに保存されます。他の人には共有されません。": "Demo mode: reviews are saved only in this browser and are not shared with others.",
+    "デモモードの簡易プロフィールです。実際の認証ではありません。": "This is a simple demo profile, not real authentication.",
+    "同じ店舗が登録済みのようです。既存店舗のレビューをご利用ください。": "This store may already be registered. Please review the existing listing.",
+    "店舗を登録できませんでした：": "Could not register store: ",
+    "店舗を登録しました。": "Store registered.",
+    "店舗の編集は管理者アカウントでログインしてください。": "Log in with an administrator account to edit stores.",
+    "店舗が見つかりません。": "Store not found.",
+    "店舗名・国・住所を入力してください。": "Enter the store name, country, and address.",
+    "Google Maps URLはhttps://から始まるURLを入力してください。": "The Google Maps URL must start with https://.",
+    "同じ国・地域に同名の店舗がすでにあります。": "A store with the same name already exists in this country/region.",
+    "店舗更新エラー:": "Store update error: ",
+    "店舗を更新できませんでした：": "Could not update store: ",
+    "Supabaseの権限設定を確認してください": "check your Supabase permissions",
+    "店舗情報を更新しました。": "Store information updated.",
+    "店舗の削除は管理者アカウントでログインしてください。": "Log in with an administrator account to delete stores.",
+    "関連レビュー削除エラー:": "Related review deletion error: ",
+    "関連レビューを削除できませんでした：": "Could not delete related reviews: ",
+    "店舗削除エラー:": "Store deletion error: ",
+    "店舗を削除できませんでした：": "Could not delete store: ",
+    "店舗を削除しました。": "Store deleted.",
+    "同じ内容のレビューが登録済みです。": "An identical review is already registered.",
+    "レビューを投稿できませんでした：": "Could not post review: ",
+    "レビューを投稿しました。": "Review posted.",
+    "ログアウト": "Log Out",
+    "登録しました。確認メールが届く場合があります。": "Signed up. You may receive a confirmation email.",
+    "ログインしました。": "Logged in.",
+    "認証に失敗しました。通信状態を確認してください。": "Authentication failed. Check your connection.",
+    "パスワードは8文字以上にしてください。": "Password must be at least 8 characters.",
+    "デモモードでは先に新規登録してください。": "In demo mode, please sign up first.",
+    "デモプロフィールを作成しました。": "Demo profile created.",
+    "ログインしました（デモ）。": "Logged in (demo).",
+    "日本の場合：千葉県": "For Japan: e.g. Chiba Prefecture",
+    "海外店舗は入力不要": "Not required for stores outside Japan",
+    "ログアウトできませんでした：": "Could not log out: ",
+    "ログアウトしました。": "Logged out.",
+    "ログイン画面を開けませんでした。": "Could not open the login dialog.",
+    "国名を入力してください。": "Please enter a country.",
+    "日本国内の店舗は都道府県を入力してください。": "For stores in Japan, enter a prefecture.",
+    "レビュー編集機能は現在の簡易版では未対応です。": "Review editing is not supported in this simplified version yet.",
+    "レビュー削除機能は現在の簡易版では未対応です。": "Review deletion is not supported in this simplified version yet.",
+    "問題報告機能は現在の簡易版では未対応です。": "Issue reporting is not supported in this simplified version yet.",
+    "ページの初期化に失敗しました。Consoleのエラーを確認してください。": "Page initialization failed. Check the console for errors.",
+    "メンバー": "Member",
+    "削除済み店舗": "Deleted store",
+    "店舗情報を編集": "Edit Store Information"
+  };
 
+  const EN_TO_JA = Object.fromEntries(
+    Object.entries(UI_TRANSLATIONS).map(([ja, en]) => [en, ja])
+  );
+
+  let siteLanguage = document.documentElement.lang === "en" ? "en" : "ja";
+  let translationObserver = null;
+
+  function translateUiText(value, language) {
+    const text = String(value ?? "");
+    const trimmed = text.trim();
+
+    if (!trimmed) return text;
+
+    const dictionary = language === "en" ? UI_TRANSLATIONS : EN_TO_JA;
+
+    if (dictionary[trimmed] !== undefined) {
+      return text.replace(trimmed, dictionary[trimmed]);
+    }
+
+    if (language === "en") {
+      let match = trimmed.match(/^(\d+)\s*件$/);
+      if (match) return text.replace(trimmed, `${match[1]} reviews`);
+
+      match = trimmed.match(/^レビュー\s*(\d+)件$/);
+      if (match) return text.replace(trimmed, `Reviews: ${match[1]}`);
+
+      match = trimmed.match(/^設置\s*(\d+)台$/);
+      if (match) return text.replace(trimmed, `Cabinets: ${match[1]}`);
+
+      match = trimmed.match(/^レビュー・コメント\s*\((\d+)\)$/);
+      if (match) return text.replace(trimmed, `Reviews & Comments (${match[1]})`);
+    } else {
+      let match = trimmed.match(/^(\d+) reviews$/);
+      if (match) return text.replace(trimmed, `${match[1]}件`);
+
+      match = trimmed.match(/^Reviews:\s*(\d+)$/);
+      if (match) return text.replace(trimmed, `レビュー ${match[1]}件`);
+
+      match = trimmed.match(/^Cabinets:\s*(\d+)$/);
+      if (match) return text.replace(trimmed, `設置 ${match[1]}台`);
+
+      match = trimmed.match(/^Reviews & Comments\s*\((\d+)\)$/);
+      if (match) return text.replace(trimmed, `レビュー・コメント (${match[1]})`);
+    }
+
+    return text;
+  }
+
+  function applySiteLanguage(language = siteLanguage, root = document.body) {
+    if (!root) return;
+
+    siteLanguage = language === "en" ? "en" : "ja";
+
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+
+    while (walker.nextNode()) {
+      textNodes.push(walker.currentNode);
+    }
+
+    textNodes.forEach(node => {
+      const parent = node.parentElement;
+
+      if (
+        !parent ||
+        parent.closest(
+          "#languageToggle,script,style,textarea,[contenteditable='true'],.store-card h3,.store-location,.recent-review p,.recent-review h3,.recent-review time,.user-content"
+        )
+      ) {
+        return;
+      }
+
+      const translated = translateUiText(node.nodeValue, siteLanguage);
+
+      if (translated !== node.nodeValue) {
+        node.nodeValue = translated;
+      }
+    });
+
+    const attrs = ["placeholder", "aria-label", "title"];
+
+    root.querySelectorAll("*").forEach(el => {
+      if (
+        el.closest("#languageToggle") ||
+        el.matches("input,textarea,[contenteditable='true']")
+      ) {
+        return;
+      }
+
+      attrs.forEach(attr => {
+        if (!el.hasAttribute(attr)) return;
+
+        const current = el.getAttribute(attr);
+        const translated = translateUiText(current, siteLanguage);
+
+        if (translated !== current) {
+          el.setAttribute(attr, translated);
+        }
+      });
+    });
+  }
+
+  window.setSiteLanguage = function(language) {
+    siteLanguage = language === "en" ? "en" : "ja";
+    document.documentElement.lang = siteLanguage;
+
+    applySiteLanguage(siteLanguage);
+
+    if (translationObserver) {
+      translationObserver.disconnect();
+    }
+
+    translationObserver = new MutationObserver(records => {
+      records.forEach(record => {
+        if (record.type === "characterData") {
+          const parent = record.target.parentElement;
+
+          if (
+            parent &&
+            !parent.closest(
+              "#languageToggle,script,style,textarea,[contenteditable='true'],.store-card h3,.store-location,.recent-review p,.recent-review h3,.recent-review time,.user-content"
+            )
+          ) {
+            const translated = translateUiText(record.target.nodeValue, siteLanguage);
+
+            if (translated !== record.target.nodeValue) {
+              record.target.nodeValue = translated;
+            }
+          }
+        } else {
+          record.addedNodes.forEach(node => {
+            if (node.nodeType === Node.TEXT_NODE) {
+              const parent = node.parentElement;
+
+              if (
+                parent &&
+                !parent.closest(
+                  "#languageToggle,script,style,textarea,[contenteditable='true'],.store-card h3,.store-location,.recent-review p,.recent-review h3,.recent-review time,.user-content"
+                )
+              ) {
+                const translated = translateUiText(node.nodeValue, siteLanguage);
+
+                if (translated !== node.nodeValue) {
+                  node.nodeValue = translated;
+                }
+              }
+            } else if (
+              node.nodeType === Node.ELEMENT_NODE &&
+              !node.matches("#languageToggle")
+            ) {
+              applySiteLanguage(siteLanguage, node);
+            }
+          });
+        }
+      });
+    });
+
+    translationObserver.observe(document.body, {
+      subtree: true,
+      childList: true,
+      characterData: true
+    });
+  };
   function bindEvents() {
 
     // 日本語・英語の切り替え
